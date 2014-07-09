@@ -26,6 +26,8 @@ extern uint32_t getPublicIPAddr();
 extern void recvbytes(int, void *, ssize_t);
 extern void sendbytes(int, void *, ssize_t);
 
+char * fsDirectoryPath;
+
 /* Linked list of registered functions */
 struct fn {
     char *fname;
@@ -219,6 +221,10 @@ void freeRet(return_type r) {
     /* else */
 
     free(r.return_val);
+}
+
+void setServingDirectory(char * directoryPath) {
+    fsDirectoryPath = directoryPath;
 }
 
 void launch_server() {
