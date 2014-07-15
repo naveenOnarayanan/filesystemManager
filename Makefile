@@ -10,7 +10,7 @@ fs_client: libstubs.a fs_client.o fs_dummy.o
 	gcc fs_client.o -L. -lstubs -o fsclient
 
 
-$(OBJECTS): %.o: %.c ece454_fs.h
+$(OBJECTS): %.o: %.c ece454_fs.h ece454rpc_types.h
 	gcc -c $< -o $@	
 	
 
