@@ -21,7 +21,8 @@ return_type r;
 
 return_type isMounted() {
     r.return_size = sizeof(int);
-    r.return_val = (void *)&1;
+    r.return_val = (void *)1;
+    return r;
 }
 
 

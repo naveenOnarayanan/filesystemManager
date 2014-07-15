@@ -17,7 +17,7 @@ char * folderAlias;
 int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {
     return_type check = make_remote_call(srvIpOrDomName,
                                             srvPort,
-                                            "isAlive", 0);
+                                            "isMounted", 0);
     int isServerAlive = *(int *)(check.return_val);
 
     if (isServerAlive == 1) {
