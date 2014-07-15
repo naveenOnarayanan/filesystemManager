@@ -19,7 +19,7 @@
 
 return_type r;
 
-return_type isMounted() {
+return_type isMounted(int i) {
     r.return_size = sizeof(int);
     r.return_val = (void *)1;
     return r;
@@ -27,7 +27,7 @@ return_type isMounted() {
 
 
 int main(int argc, char *argv[]) {
-    register_procedure("isMounted", 0, isMounted);
+    register_procedure("isMounted", 1, isMounted);
 
     /*if (argc == 2) {
         setServingDirectory(argv[1]);
