@@ -23,6 +23,9 @@ int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *
 
     if (isServerAlive == 1) {
         folderAlias = localFolderName;
+        return isServerAlive;
+    } else {
+        return -1;
     }
 }
 
