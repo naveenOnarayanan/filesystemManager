@@ -88,12 +88,18 @@ struct fsDirent *fsReadDir(FSDIR *folder) {
 }
 
 int fsOpen(const char *fname, int mode) {
+    printf("serverIP: %s\n", serverIPOrDomainName);
+    printf("serverPort: %d\n", serverPort);
+
     if (strncmp(fname, folderAlias, folderAliasLength) == 0) {
+        char * tmp = fname;
+        tmp+= folderAliasLength;
+
         return_type result = make_remote_call(serverIPOrDomainName,
                                               serverPort,
                                               "fsOpen", 2,
-                                              strlen(fname) + 1, fname,
-                                              sizeof(int), mode);
+                                              strlen(tmp) + 1, tmp,
+                                              sizeof(int), (void *) &mode);
         if (result.return_size == sizeof(int)) {
             return *(int *)result.return_val;
         }

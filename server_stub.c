@@ -34,6 +34,8 @@ struct fn {
     struct fn *next;
 };
 
+char * hostedFolder;
+
 struct fn *fnp = NULL; /* Database of registered functions.
                           Warning: almost no error checking!
 			  E.g., a function may be registered
@@ -116,8 +118,9 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
 
 	newarg->arg_val = (void *)malloc(newarg->arg_size);
 	recvbytes(s, (void *)(newarg->arg_val), newarg->arg_size);
-
+    printf("argVal: %s\n", (char *)newarg->arg_val);
 	newarg->next = NULL;
+    printf("here\n");
 	if(i == 0) {
 	    *pa = newarg;
 	}
@@ -219,6 +222,16 @@ void freeRet(return_type r) {
     /* else */
 
     free(r.return_val);
+}
+
+void registerMountFolder(char * folderName) {
+    int folderNameLength = strlen(folderName);
+    hostedFolder = malloc(folderNameLength * sizeof(char));
+    strcpy(hostedFolder, folderName);
+}
+
+char * getHostedFolder() {
+    return hostedFolder;
 }
 
 void launch_server() {

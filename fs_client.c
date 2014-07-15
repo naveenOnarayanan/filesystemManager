@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
     printf("fsMount(): %d\n", fsMount("192.168.1.114", 10000, "/home"));
     //printf("fsUnmount(): %d\n", fsUnmount("/home"));
-    //printf("fsOpen(): %d\n", fsOpen("/home/ass/test.txt", 1));
+    printf("fsOpen(): %d\n", fsOpen("/home/ass/test.txt", 1));
 
  //    if(argc > 1) dirname = argv[1];
  //    else {
