@@ -107,11 +107,11 @@ int main(int argc, char *argv[])
     }
 
     return_type ans;
-
+    int a = 1;
     ans = make_remote_call(argv[1],
                            atoi(argv[2]),
                            "isMounted",
-                           0);
+                           1, sizeof(int), (void *) &a);
     int i = *(int*)ans.return_val;
     printf("Success: %d\n", i);
  //    int a = -10, b = 20;
