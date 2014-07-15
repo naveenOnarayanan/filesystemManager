@@ -105,42 +105,51 @@ int main(int argc, char *argv[])
 	printf("usage: %s <server ip/name> <server port>\n", argv[0]);
 	return 0;
     }
-    int a = -10, b = 20;
+
     return_type ans;
+
     ans = make_remote_call(argv[1],
-		       atoi(argv[2]),
-		       "addtwo", 2,
-	               sizeof(int), (void *)(&a),
-	               sizeof(int), (void *)(&b));
-    int i = *(int *)(ans.return_val);
-    printf("addtwo(%d, %d) = %d\n", a, b, i);
+                           atoi(argv[2]),
+                           "isMounted",
+                           0);
+    int i = *(int*)ans.return_val;
+    printf("Success: %d\n", i);
+ //    int a = -10, b = 20;
+ //    return_type ans;
+ //    ans = make_remote_call(argv[1],
+	// 	       atoi(argv[2]),
+	// 	       "addtwo", 2,
+	//                sizeof(int), (void *)(&a),
+	//                sizeof(int), (void *)(&b));
+ //    int i = *(int *)(ans.return_val);
+ //    printf("addtwo(%d, %d) = %d\n", a, b, i);
 
-    ans = make_remote_call(argv[1], atoi(argv[2]),
-	    "pickFirst", 2,
-	    sizeof(int), (void *)(&a),
-	    sizeof(int), (void *)(&b));
+ //    ans = make_remote_call(argv[1], atoi(argv[2]),
+	//     "pickFirst", 2,
+	//     sizeof(int), (void *)(&a),
+	//     sizeof(int), (void *)(&b));
 
-    if(ans.return_size > 0) {
-	printf("pickFirst(%d, %d) = %d\n", a, b,
-		*(int *)(ans.return_val));
-    }
-    else {
-	printf("return_size is 0!\n");
-    }
+ //    if(ans.return_size > 0) {
+	// printf("pickFirst(%d, %d) = %d\n", a, b,
+	// 	*(int *)(ans.return_val));
+ //    }
+ //    else {
+	// printf("return_size is 0!\n");
+ //    }
 
-    testsort(argv);
+ //    testsort(argv);
 
-    /* Does addtwo still work?*/
-    a = 200; b = -12;
-    ans = make_remote_call(argv[1],
-		       atoi(argv[2]),
-		       "addtwo", 2,
-	               sizeof(int), (void *)(&a),
-	               sizeof(int), (void *)(&b));
-    i = *(int *)(ans.return_val);
-    printf("addtwo(%d, %d) = %d\n", a, b, i);
+ //    /* Does addtwo still work?*/
+ //    a = 200; b = -12;
+ //    ans = make_remote_call(argv[1],
+	// 	       atoi(argv[2]),
+	// 	       "addtwo", 2,
+	//                sizeof(int), (void *)(&a),
+	//                sizeof(int), (void *)(&b));
+ //    i = *(int *)(ans.return_val);
+ //    printf("addtwo(%d, %d) = %d\n", a, b, i);
 
-    testconcat(argv);
+ //    testconcat(argv);
 
     return 0;
 }
