@@ -1,7 +1,7 @@
 OBJECTS := $(patsubst %.c,%.o,$(wildcard *.c))
 includes := $(wildcard *.h)
 
-all: sample_client_app sample_server_app
+all: sample_server_app
 
 sample_server_app: libstubs.a sample_server_app.o
 	gcc sample_server_app.o -L. -lstubs -o server
