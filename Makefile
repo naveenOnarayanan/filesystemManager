@@ -13,7 +13,7 @@ $(OBJECTS): %.o: %.c ece454_fs.h ece454rpc_types.h
 	gcc -c $< -o $@	
 	
 
-libstubs.a: server_stub.o client_stub.o helper.o mybind.o
+libstubs.a: server_stub.o client_stub.o helper.o mybind.o fs_dummy.o
 	ar r libstubs.a server_stub.o client_stub.o helper.o mybind.o
 
 clean:
