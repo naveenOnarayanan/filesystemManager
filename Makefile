@@ -17,4 +17,4 @@ libstubs.a: server_stub.o client_stub.o helper.o mybind.o fs_dummy.o
 	ar r libstubs.a server_stub.o client_stub.o helper.o mybind.o fs_dummy.o
 
 clean:
-	rm -rf a.out *.o core *.a fs_client *_app
+	rm -rf a.out *.o core *.a fs_client *_app server fsclient
