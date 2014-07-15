@@ -18,7 +18,7 @@
 #include <signal.h>
 #include "ece454rpc_types.h"
 
-#if 0
+#if 1 
 #define _DEBUG_1_
 #endif
 
@@ -105,6 +105,7 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
     }
 
     int i;
+    printf("NUmber of args got from server: %d\n", *pnparams);
     for(i = 0; i < *pnparams; i++) {
 	arg_type *newarg = (arg_type *)malloc(sizeof(arg_type));
 	recvbytes(s, (void *)(&(newarg->arg_size)), sizeof(int));
@@ -197,7 +198,9 @@ void returnResult(int s, return_type *ret) {
 
     /* else */
     sendbytes(s, (void *)(&(ret->return_size)), sizeof(int));
+    printf("sent the first size\n");
     sendbytes(s, ret->return_val, ret->return_size);
+    printf("sent the data\n");
 }
 
 void freeArgs(arg_type *a) {
@@ -252,7 +255,7 @@ void launch_server() {
 
 	char *fname;
 	int nparams;
-	arg_type *a;
+	arg_type *a = NULL;
 	return_type ret;
 
 	recvCall(asock, &fname, &nparams, &a);
@@ -268,6 +271,8 @@ void launch_server() {
 #endif
 
 	returnResult(asock, &ret);
+
+	printf("finished returning\n");	
 
 	free(fname);
 	freeArgs(a);
