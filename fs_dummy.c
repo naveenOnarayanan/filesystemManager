@@ -13,12 +13,12 @@
 #include <string.h>
 
 struct fsDirent dent;
-char * folderAlias;
+const char * folderAlias;
 
 int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {
     return_type check = make_remote_call(srvIpOrDomName,
                                             srvPort,
-                                            "isMounted", 0);
+                                            "isAlive", 0);
     int isServerAlive = *(int *)(check.return_val);
 
     if (isServerAlive == 1) {

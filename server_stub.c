@@ -252,7 +252,7 @@ void launch_server() {
 
 	char *fname;
 	int nparams;
-	arg_type *a;
+	arg_type *a = NULL;
 	return_type ret;
 
 	recvCall(asock, &fname, &nparams, &a);
