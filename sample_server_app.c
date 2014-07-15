@@ -29,9 +29,10 @@ return_type isMounted() {
 int main(int argc, char *argv[]) {
     register_procedure("isMounted", 0, isMounted);
 
-    if (argc == 2) {
+    /*if (argc == 2) {
         setServingDirectory(argv[1]);
-    }
+    }*/
+	
 
 #ifdef _DEBUG_1_
     printRegisteredProcedures();
