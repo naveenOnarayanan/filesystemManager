@@ -26,8 +26,6 @@ extern uint32_t getPublicIPAddr();
 extern void recvbytes(int, void *, ssize_t);
 extern void sendbytes(int, void *, ssize_t);
 
-char * fsDirectoryPath;
-
 /* Linked list of registered functions */
 struct fn {
     char *fname;
@@ -38,22 +36,23 @@ struct fn {
 
 struct fn *fnp = NULL; /* Database of registered functions.
                           Warning: almost no error checking!
-              E.g., a function may be registered
-              twice and we wouldn't know it. */
+			  E.g., a function may be registered
+			  twice and we wouldn't know it. */
 
 void printRegisteredProcedures() {
     printf("Registered procedures:\n"); fflush(stdout);
     struct fn *tmp;
     for(tmp = fnp; tmp != NULL; tmp = tmp->next) {
-    printf("\t%s, %d\n", tmp->fname, tmp->nparams);
-    fflush(stdout);
+	printf("\t%s, %d\n", tmp->fname, tmp->nparams);
+	fflush(stdout);
     }
 
 }
 
 bool register_procedure(const char *procedure_name,
-                const int nparams,
-                fp_type fnpointer) {
+		        const int nparams,
+		        fp_type fnpointer)
+{
     if(procedure_name == NULL) return false;
 
     struct fn *newfn = (struct fn *)malloc(sizeof(struct fn));
@@ -82,8 +81,8 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
 #endif
 
     if(fnamelen <= 0) {
-    fprintf(stderr, "fnamelen = %d\n!", fnamelen);
-    exit(1);
+	fprintf(stderr, "fnamelen = %d\n!", fnamelen);
+	exit(1);
     }
 
     *pfname = (char *)calloc(fnamelen + 1, sizeof(char));
@@ -101,80 +100,80 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
 #endif
 
     if((*pnparams) < 0) {
-    fprintf(stderr, "*pnparams = %d\n!", *pnparams);
-    exit(1);
+	fprintf(stderr, "*pnparams = %d\n!", *pnparams);
+	exit(1);
     }
 
     int i;
     for(i = 0; i < *pnparams; i++) {
-    arg_type *newarg = (arg_type *)malloc(sizeof(arg_type));
-    recvbytes(s, (void *)(&(newarg->arg_size)), sizeof(int));
-    if((newarg->arg_size) <= 0) {
-        fprintf(stderr, "newarg[%d]->arg_size = %d\n!",
-            i, newarg->arg_size);
-        exit(1);
-    }
+	arg_type *newarg = (arg_type *)malloc(sizeof(arg_type));
+	recvbytes(s, (void *)(&(newarg->arg_size)), sizeof(int));
+	if((newarg->arg_size) <= 0) {
+	    fprintf(stderr, "newarg[%d]->arg_size = %d\n!",
+		    i, newarg->arg_size);
+	    exit(1);
+	}
 
-    newarg->arg_val = (void *)malloc(newarg->arg_size);
-    recvbytes(s, (void *)(newarg->arg_val), newarg->arg_size);
+	newarg->arg_val = (void *)malloc(newarg->arg_size);
+	recvbytes(s, (void *)(newarg->arg_val), newarg->arg_size);
 
-    newarg->next = NULL;
-    if(i == 0) {
-        *pa = newarg;
-    }
-    else {
-        /* insert at the end */
-        arg_type *tmp;
-        for(tmp = *pa; tmp->next != NULL; tmp = tmp->next) ;
-        tmp->next = newarg;
-    }
+	newarg->next = NULL;
+	if(i == 0) {
+	    *pa = newarg;
+	}
+	else {
+	    /* insert at the end */
+	    arg_type *tmp;
+	    for(tmp = *pa; tmp->next != NULL; tmp = tmp->next) ;
+	    tmp->next = newarg;
+	}
     }
 }
 
 void makeCall(char *fname, int nparams, arg_type *a, return_type *r) {
     if(r == NULL) {
-    fprintf(stderr, "makeCall() -- null r!\n");
-    exit(1);
+	fprintf(stderr, "makeCall() -- null r!\n");
+	exit(1);
     }
 
     if(fname == NULL) {
-    fprintf(stderr, "makeCall() with null fname!\n");
-    exit(1);
+	fprintf(stderr, "makeCall() with null fname!\n");
+	exit(1);
     }
 
 #ifdef _DEBUG_1_
-    printf("makeCall(), about to look for %s\n", fname); fflush(stdout);
+	printf("makeCall(), about to look for %s\n", fname); fflush(stdout);
 #endif
 
     struct fn *tmp;
     for(tmp = fnp; tmp != NULL; tmp = tmp->next) {
 #ifdef _DEBUG_1_
-    printf("makeCall(), tmp: 0x%08x\n", (unsigned int)tmp);
-    fflush(stdout);
+	printf("makeCall(), tmp: 0x%08x\n", (unsigned int)tmp);
+	fflush(stdout);
 #endif
-    if(!strcmp(fname, tmp->fname) && nparams == tmp->nparams) {
-        break;
-    }
+	if(!strcmp(fname, tmp->fname) && nparams == tmp->nparams) {
+	    break;
+	}
     }
 
 #ifdef _DEBUG_1_
-    printf("makeCall(), stopped looking for %s\n", fname); fflush(stdout);
+	printf("makeCall(), stopped looking for %s\n", fname); fflush(stdout);
 #endif
 
     if(tmp == NULL) {
-    r->return_val = NULL;
-    r->return_size = 0;
+	r->return_val = NULL;
+	r->return_size = 0;
     }
     else {
 #ifdef _DEBUG_1_
-    printf("about to makeCall(%s)\n", fname); fflush(stdout);
+	printf("about to makeCall(%s)\n", fname); fflush(stdout);
 #endif
-    return_type ret = (*(tmp->fp))(nparams, a);
+	return_type ret = (*(tmp->fp))(nparams, a);
 #ifdef _DEBUG_1_
-    printf("makeCall(), returned from call to %s()\n", fname); fflush(stdout);
+	printf("makeCall(), returned from call to %s()\n", fname); fflush(stdout);
 #endif
-    r->return_size = ret.return_size;
-    r->return_val = ret.return_val;
+	r->return_size = ret.return_size;
+	r->return_val = ret.return_val;
     }
 
     return;
@@ -186,9 +185,9 @@ void returnResult(int s, return_type *ret) {
 #endif
 
     if(ret == NULL || ret->return_size <= 0) {
-    int i = 0;
-    sendbytes(s, &i, sizeof(int));
-    return;
+	int i = 0;
+	sendbytes(s, &i, sizeof(int));
+	return;
     }
 
 #ifdef _DEBUG_1_
@@ -204,26 +203,22 @@ void returnResult(int s, return_type *ret) {
 void freeArgs(arg_type *a) {
     arg_type *tmp;
     for(tmp = a; tmp != NULL; tmp = a) {
-    a = a->next;
-    if(tmp->arg_size > 0) {
-        free(tmp->arg_val);
-    }
-    free(tmp);
+	a = a->next;
+	if(tmp->arg_size > 0) {
+	    free(tmp->arg_val);
+	}
+	free(tmp);
     }
 }
 
 void freeRet(return_type r) {
     if(r.return_size <= 0 || r.return_val == NULL) {
-    return;
+	return;
     }
     
     /* else */
 
     free(r.return_val);
-}
-
-void setServingDirectory(char * directoryPath) {
-    fsDirectoryPath = directoryPath;
 }
 
 void launch_server() {
@@ -234,52 +229,52 @@ void launch_server() {
     a.sin_family = AF_INET;
     a.sin_port = 0;
     if((a.sin_addr.s_addr = getPublicIPAddr()) == 0) {
-    fprintf(stderr, "Could not get public ip address. Exiting...\n");
-    exit(0);
+	fprintf(stderr, "Could not get public ip address. Exiting...\n");
+	exit(0);
     }
 
     if(mybind(s, &a) < 0) {
-    fprintf(stderr, "mybind() failed. Exiting...\n");
-    exit(0);
+	fprintf(stderr, "mybind() failed. Exiting...\n");
+	exit(0);
     }
 
     printf("%s %u\n", inet_ntoa(a.sin_addr), ntohs(a.sin_port));
     
     if(listen(s, 0) < 0) {
-    perror("listen"); exit(0);
+	perror("listen"); exit(0);
     }
 
     memset(&a, 0, sizeof(struct sockaddr_in));
     socklen_t alen = sizeof(struct sockaddr_in);
     int asock = -1;
     while((asock = accept(s, (struct sockaddr *)&a, &alen)) > 0) {
-    /* Single-threaded */
+	/* Single-threaded */
 
-    char *fname;
-    int nparams;
-    arg_type *a;
-    return_type ret;
+	char *fname;
+	int nparams;
+	arg_type *a;
+	return_type ret;
 
-    recvCall(asock, &fname, &nparams, &a);
-
-#ifdef _DEBUG_1_
-    printf("launch_server(), before makeCall()\n"); fflush(stdout);
-#endif
-
-    makeCall(fname, nparams, a, &ret);
+	recvCall(asock, &fname, &nparams, &a);
 
 #ifdef _DEBUG_1_
-    printf("launch_server(), after makeCall()\n"); fflush(stdout);
+	printf("launch_server(), before makeCall()\n"); fflush(stdout);
 #endif
 
-    returnResult(asock, &ret);
+	makeCall(fname, nparams, a, &ret);
 
-    free(fname);
-    freeArgs(a);
-    freeRet(ret);
+#ifdef _DEBUG_1_
+	printf("launch_server(), after makeCall()\n"); fflush(stdout);
+#endif
 
-    shutdown(asock, SHUT_RDWR); close(asock);
-    asock = -1;
+	returnResult(asock, &ret);
+
+	free(fname);
+	freeArgs(a);
+	freeRet(ret);
+
+	shutdown(asock, SHUT_RDWR); close(asock);
+	asock = -1;
     }
 
     /* WARNING -- massive memory, linked list of registered
