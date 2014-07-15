@@ -1,3 +1,5 @@
 *.o
 libstubs.a
 *_app
+fsclient
+server
