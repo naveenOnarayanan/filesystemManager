@@ -9,6 +9,7 @@
  * such as opendir() and read() that are made here.
  */
 #include "ece454_fs.h"
+#include "ece454rpc_types.h"
 #include <string.h>
 
 struct fsDirent dent;
