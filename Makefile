@@ -14,7 +14,7 @@ $(OBJECTS): %.o: %.c ece454_fs.h ece454rpc_types.h
 	
 
 libstubs.a: server_stub.o client_stub.o helper.o mybind.o fs_dummy.o
-	ar r libstubs.a server_stub.o client_stub.o helper.o mybind.o
+	ar r libstubs.a server_stub.o client_stub.o helper.o mybind.o fs_dummy.o
 
 clean:
 	rm -rf a.out *.o core *.a fs_client *_app
