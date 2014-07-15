@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "ece454_fs.h"
+#include "ece454rpc_types.h"
 
 void printBuf(char *buf, int size) {
     /* Should match the output from od -x */
