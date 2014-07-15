@@ -11,9 +11,14 @@
 #include "ece454_fs.h"
 #include "ece454rpc_types.h"
 #include <string.h>
+#include <stdlib.h>
 
 struct fsDirent dent;
-const char * folderAlias;
+char * folderAlias;
+char * serverIPOrDomainName;
+int serverPort;
+int folderAliasLength = 0;
+
 
 int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {
     return_type check = make_remote_call(srvIpOrDomName,
@@ -22,7 +27,17 @@ int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *
     int isServerAlive = *(int *)(check.return_val);
 
     if (isServerAlive == 1) {
-        folderAlias = localFolderName;
+        serverIPOrDomainName = malloc(strlen(srvIpOrDomName) * sizeof(char));
+        strcpy(serverIPOrDomainName, srvIpOrDomName);
+
+        serverPort = srvPort;
+
+        folderAliasLength = strlen(localFolderName);
+        folderAlias = malloc(folderAliasLength * sizeof(char));
+
+        strcpy(folderAlias, localFolderName);
+        
+        printf("Folder name: %s\n", folderAlias);
         return isServerAlive;
     } else {
         return -1;
@@ -30,7 +45,15 @@ int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *
 }
 
 int fsUnmount(const char *localFolderName) {
-    return 0;
+    printf("folderAlias: %s\n", folderAlias);
+    if (strcmp(folderAlias, localFolderName) == 0) {
+        folderAliasLength = 0;
+        serverPort = 0;
+        free(serverIPOrDomainName);
+        free(folderAlias);
+        return 0;
+    }
+    return -1;
 }
 
 FSDIR* fsOpenDir(const char *folderName) {
@@ -65,16 +88,29 @@ struct fsDirent *fsReadDir(FSDIR *folder) {
 }
 
 int fsOpen(const char *fname, int mode) {
-    int flags = -1;
-
-    if(mode == 0) {
-	flags = O_RDONLY;
+    if (strncmp(fname, folderAlias, folderAliasLength) == 0) {
+        return_type result = make_remote_call(serverIPOrDomainName,
+                                              serverPort,
+                                              "fsOpen", 2,
+                                              strlen(fname) + 1, fname,
+                                              sizeof(int), mode);
+        if (result.return_size == sizeof(int)) {
+            return *(int *)result.return_val;
+        }
     }
-    else if(mode == 1) {
-	flags = O_WRONLY | O_CREAT;
-    }
 
-    return(open(fname, flags, S_IRWXU));
+    return 0;
+
+ //    int flags = -1;
+
+ //    if(mode == 0) {
+	// flags = O_RDONLY;
+ //    }
+ //    else if(mode == 1) {
+	// flags = O_WRONLY | O_CREAT;
+ //    }
+
+ //    return(open(fname, flags, S_IRWXU));
 }
 
 int fsClose(int fd) {
