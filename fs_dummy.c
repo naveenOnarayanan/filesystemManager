@@ -12,11 +12,17 @@
 #include <string.h>
 
 struct fsDirent dent;
+char * folderAlias;
 
 int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {
-    struct stat sbuf;
+    return_type check = make_remote_call(srvIpOrDomName,
+                                            srvPort,
+                                            "isAlive", 0);
+    int isServerAlive = *(int *)(check.return_val);
 
-    return(stat(localFolderName, &sbuf));
+    if (isServerAlive == 1) {
+        folderAlias = localFolderName;
+    }
 }
 
 int fsUnmount(const char *localFolderName) {
