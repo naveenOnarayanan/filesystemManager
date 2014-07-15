@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     char *dirname = NULL;
 
-    fsMount("192.168.1.114", 10000, "/home");
+    printf("fsMount(): %d\n", fsMount("192.168.1.114", 10000, "/home"));
 
  //    if(argc > 1) dirname = argv[1];
  //    else {
