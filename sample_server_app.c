@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include "ece454rpc_types.h"
 
 #if 1
@@ -34,11 +35,40 @@ return_type fsOpen(const int nparams, arg_type *a) {
         char * folderName = a->arg_val;
         int mode = *(int*)a->next->arg_val;
 
+        int totalLength = strlen(getHostedFolder());
+        totalLength += strlen(folderName);
+        char * serverFolder = malloc(totalLength * sizeof(char));
+        strcpy(serverFolder, (char *) getHostedFolder());
+        strcat(serverFolder, (char *) folderName);
+
+        printf("Final folder name: %s\n", serverFolder);
+
         printf("Folder Name: %s%s\n", getHostedFolder(), folderName);
         printf("Mode: %d\n", mode);
 
-        r.return_val = NULL;
-        r.return_size = 0;
+        int flag;
+        if (mode == 1) {
+            flag = O_RDONLY;
+        } else {
+            flag = O_WRONLY | O_CREAT;
+        }
+
+        int *fileDescriptor = (int*)malloc(sizeof(int));
+        *fileDescriptor = open(serverFolder, flag, S_IRWXU);
+
+        printf("FileDescriptor: %d\n", *fileDescriptor);
+
+        if (*fileDescriptor < 0) {
+            r.return_val = NULL;
+            r.return_size = 0;
+        } else {
+            r.return_val = (void *)fileDescriptor;
+            r.return_size = sizeof(int);
+        }
+
+        free(serverFolder);
+        // r.return_val = NULL;
+        // r.return_size = 0;
         return r;
     }
 }
@@ -53,6 +83,7 @@ int main(int argc, char*argv[]) {
 #ifdef _DEBUG_1_
         printRegisteredProcedures();
 #endif
+        printf("Registered Folder: %s\n", getHostedFolder());
 
         launch_server();
     }

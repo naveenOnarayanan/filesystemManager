@@ -8,9 +8,13 @@
 int main(int argc, char *argv[]) {
     char *dirname = NULL;
 
-    printf("fsMount(): %d\n", fsMount("192.168.1.114", 10000, "/home"));
+    if (argc != 3) {
+    	exit(1);
+    }
+
+    printf("fsMount(): %d\n", fsMount(argv[1], atoi(argv[2]), "/home"));
     //printf("fsUnmount(): %d\n", fsUnmount("/home"));
-    printf("fsOpen(): %d\n", fsOpen("/home/ass/test.txt", 1));
+    printf("fsOpen(): %d\n", fsOpen("/home/4.pdf", 1));
 
  //    if(argc > 1) dirname = argv[1];
  //    else {

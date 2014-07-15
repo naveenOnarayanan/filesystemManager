@@ -225,7 +225,7 @@ void freeRet(return_type r) {
 }
 
 void registerMountFolder(char * folderName) {
-    int folderNameLength = strlen(folderName);
+    int folderNameLength = strlen(folderName) + 1;
     hostedFolder = malloc(folderNameLength * sizeof(char));
     strcpy(hostedFolder, folderName);
 }
