@@ -34,7 +34,7 @@ void printBuf(char *buf, int size) {
 int main(int argc, char *argv[]) {
     char *dirname = NULL;
 
-    fsMount("", "", "/home");
+    fsMount("", 0, "/home");
 
  //    if(argc > 1) dirname = argv[1];
  //    else {
