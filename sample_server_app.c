@@ -2,7 +2,7 @@
    University of Waterloo
    Part of a simplified RPC implementation
 */
-
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +47,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
         printf("Mode: %d\n", mode);
 
         int flag;
-        if (mode == 1) {
+        if (mode == 0) {
             flag = O_RDONLY;
         } else {
             flag = O_WRONLY | O_CREAT;
@@ -55,6 +55,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
 
         int *fileDescriptor = (int*)malloc(sizeof(int));
         *fileDescriptor = open(serverFolder, flag, S_IRWXU);
+        printf("Error: %s\n", strerror(errno));
 
         printf("FileDescriptor: %d\n", *fileDescriptor);
 
@@ -67,23 +68,33 @@ return_type fsOpen(const int nparams, arg_type *a) {
         }
 
         free(serverFolder);
-        // r.return_val = NULL;
-        // r.return_size = 0;
-        return r;
+    } else {
+        r.return_val = NULL;
+        r.return_size = 0;
     }
+    return r;
 }
 
 return_type fsRead(const int nparams, arg_type *a) {
-    if (nparams != 2) {
+    printf("params: %d\n", nparams);
+    if (nparams == 2) {
         int fileDescriptor = *(int *)a->arg_val;
         unsigned int count = *(unsigned int*) a->next->arg_val;
-
+        printf("File descriptor: %d\n", fileDescriptor);
+        printf("Count: %d\n", count);
         char * buff = malloc(count * sizeof(char));
-        if (read(fileDescriptor, buff, (size_t)count)) {
-            r.return_size = sizeof(buff);
+        if (read(fileDescriptor, buff, (size_t)count) >= 0) {
+            printf("Was able to read file\n");
+            printf("Size of buffer: %d\n", sizeof(buff));
+            r.return_size = strlen(buff);
             r.return_val = buff;
+            printBuf(buff, 256);
+        } else {
+            printf("read return: %d\n", read(fileDescriptor, buff, (size_t)count));
+            printf("Oh no! %s\n", strerror(errno));
         }
     } else {
+        printf("Number of parameters dont match! %d\n", nparams);
         r.return_val = NULL;
         r.return_size = 0;
     }
@@ -97,6 +108,7 @@ int main(int argc, char*argv[]) {
         registerMountFolder(argv[1]);
         register_procedure("isAlive", 0, isAlive);
         register_procedure("fsOpen", 2, fsOpen);
+        register_procedure("fsRead", 2, fsRead);
 
 #ifdef _DEBUG_1_
         printRegisteredProcedures();
