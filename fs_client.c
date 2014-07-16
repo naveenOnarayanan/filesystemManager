@@ -16,8 +16,12 @@ int main(int argc, char *argv[]) {
     //printf("fsUnmount(): %d\n", fsUnmount("/home");
     int dd = fsOpen(argv[4], 0);
     printf("fsOpen(): %d\n", dd);
-    char buff[256];
-    fsRead(dd, (void *)buff, 256);
+    if (dd == 0) {
+    	printf("Unable to find file\n");
+    } else {
+	    char buff[256];
+	    fsRead(dd, (void *)buff, 256);
+	}
     // int i;
     // for(i = 0; i < 500; i++) {
 	// //printf("%d\n", ((unsigned char)(fname[i]))%26);
@@ -25,7 +29,7 @@ int main(int argc, char *argv[]) {
  //    }
  //    buff[500] = (char)0;
  //    printf("Filename to write: %s\n", (char *)buff);
-    printBuf(buff, 256);
+    // printBuf(buff, 256);
 
  //    if(argc > 1) dirname = argv[1];
  //    else {

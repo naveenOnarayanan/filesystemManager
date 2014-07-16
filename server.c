@@ -124,6 +124,8 @@ int main(int argc, char*argv[]) {
         printf("Registered Folder: %s\n", hostFolder.hostedFolderName);
 
         launch_server();
+    } else {
+        printf("Format: ./server <folder_path>\n");
     }
     return 0;
 }
