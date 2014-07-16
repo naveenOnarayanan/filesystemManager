@@ -148,7 +148,23 @@ int fsClose(int fd) {
 }
 
 int fsRead(int fd, void *buf, const unsigned int count) {
-    return(read(fd, buf, (size_t)count));
+    return_type result = make_remote_call(serverIPOrDomainName,
+                                          serverPort,
+                                          "fsRead", 2,
+                                          sizeof(int), (void *) &fd,
+                                          sizeof(unsigned int), (void *)&count);
+
+    if (result.return_size == 0) {
+        return -1;
+    }
+
+    printf("Return size: %d\n", result.return_size);
+    printBuf(result.return_val, result.return_size);
+
+    memcpy(buf, result.return_val, result.return_size);
+    return 0;
+
+    //return(read(fd, buf, (size_t)count));
 }
 
 int fsWrite(int fd, const void *buf, const unsigned int count) {
