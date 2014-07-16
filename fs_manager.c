@@ -17,7 +17,7 @@ struct fsDirent dent;
 char * folderAlias;
 char * serverIPOrDomainName;
 int serverPort;
-int folderAliasLength = 0;
+size_t folderAliasLength = 0;
 
 
 int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {

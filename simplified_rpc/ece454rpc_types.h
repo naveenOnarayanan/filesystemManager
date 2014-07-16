@@ -14,6 +14,12 @@ typedef struct arg {
     struct arg *next;
 } arg_type;
 
+
+typedef struct {
+	char *hostedFolderName;
+	int hostedFolderNameLength;
+} host_folder;
+
 /* Type for the function pointer with which server code registers with the
  * server stub. The first const int argument is the # of arguments, i.e.,
  * array entries in the second argument. */

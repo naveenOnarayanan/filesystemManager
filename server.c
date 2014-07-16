@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include "simplified_rpc/ece454rpc_types.h"
 
+
 #if 1
 #define _DEBUG_1_
 #endif
@@ -19,6 +20,7 @@
  * response to the client. */
 
 return_type r;
+host_folder hostFolder;
 
 extern printRegisteredProcedures();
 
@@ -35,16 +37,16 @@ return_type fsOpen(const int nparams, arg_type *a) {
         char * folderName = a->arg_val;
         int mode = *(int*)a->next->arg_val;
 
-        int totalLength = strlen(getHostedFolder());
+        size_t totalLength = hostFolder.hostedFolderNameLength;
         totalLength += strlen(folderName) + 1;
         char * serverFolder = malloc(totalLength * sizeof(char));
-        strcpy(serverFolder, (char *) getHostedFolder());
+        strcpy(serverFolder, (char *) hostFolder.hostedFolderName);
         strcat(serverFolder, (char *) folderName);
 
         printf("Final folder name: %s\n", serverFolder);
 
-        printf("Folder Name: %s%s\n", getHostedFolder(), folderName);
-        printf("Mode: %d\n", mode);
+        // printf("Folder Name: %s%s\n", getHostedFolder(), folderName);
+        // printf("Mode: %d\n", mode);
 
         int flag;
         if (mode == 0) {
@@ -85,7 +87,6 @@ return_type fsRead(const int nparams, arg_type *a) {
         char * buff = malloc(count * sizeof(char));
         if (read(fileDescriptor, buff, (size_t)count) >= 0) {
             printf("Was able to read file\n");
-            printf("Size of buffer: %d\n", sizeof(buff));
             r.return_size = strlen(buff);
             r.return_val = buff;
             printBuf(buff, 256);
@@ -102,6 +103,13 @@ return_type fsRead(const int nparams, arg_type *a) {
     return r;
 }
 
+void registerMountFolder(const char * folderName) {
+    size_t folderNameLen = strlen(folderName) + 1;
+    hostFolder.hostedFolderName = malloc(folderNameLen * sizeof(char));
+    memcpy(hostFolder.hostedFolderName, folderName, folderNameLen);
+    hostFolder.hostedFolderNameLength = strlen(folderName);
+}
+
 int main(int argc, char*argv[]) {
 
     if (argc == 2) {
@@ -113,7 +121,7 @@ int main(int argc, char*argv[]) {
 #ifdef _DEBUG_1_
         printRegisteredProcedures();
 #endif
-        printf("Registered Folder: %s\n", getHostedFolder());
+        printf("Registered Folder: %s\n", hostFolder.hostedFolderName);
 
         launch_server();
     }
