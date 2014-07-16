@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "ece454_fs.h"
-#include "simplified_rpc/ece454rpc_types.h"
+#include "ece454rpc_types.h"
 
 int main(int argc, char *argv[]) {
     char *dirname = NULL;

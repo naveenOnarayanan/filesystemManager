@@ -9,7 +9,7 @@
  * such as opendir() and read() that are made here.
  */
 #include "ece454_fs.h"
-#include "ece454rpc_types.h"
+#include "simplified_rpc/ece454rpc_types.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -58,43 +58,43 @@ int fsUnmount(const char *localFolderName) {
 
 FSDIR* fsOpenDir(const char *folderName) {
 
-    if (strncmp(folderName, folderAlias, folderAliasLength) == 0) {
-        char * temp = folderName;
-        temp += folderAliasLength;
-        FSDIR retDir;
+    // if (strncmp(folderName, folderAlias, folderAliasLength) == 0) {
+    //     char * temp = folderName;
+    //     temp += folderAliasLength;
+    //     FSDIR retDir;
 
-        return_type dir = make_remote_call(srvIpOrDomName,
-                                            srvPort,
-                                            "fsOpenDir",
-                                            0);
+    //     return_type dir = make_remote_call(srvIpOrDomName,
+    //                                         srvPort,
+    //                                         "fsOpenDir",
+    //                                         0);
 
-        if (dir.return_size == 0) {
-            // TODO: Set the errno appropriately
-            // errno = -1;
-            return NULL;
-        } else {
-            retDir = return_type.return_val;
-            return retDir;
-        }
-    }
+    //     if (dir.return_size == 0) {
+    //         // TODO: Set the errno appropriately
+    //         // errno = -1;
+    //         return NULL;
+    //     } else {
+    //         retDir = return_type.return_val;
+    //         return retDir;
+    //     }
+    // }
 
     //return(opendir(folderName));
 }
 
 int fsCloseDir(FSDIR *folder) {
 
-    if (strcmp(folder->d_name, localFolderName) == 0) {
-        return_type dir = make_remote_call(srvIpOrDomName,
-                                            srvPort,
-                                            "fsCloseDir",
-                                            0);
+    // if (strcmp(folder->d_name, localFolderName) == 0) {
+    //     return_type dir = make_remote_call(srvIpOrDomName,
+    //                                         srvPort,
+    //                                         "fsCloseDir",
+    //                                         0);
 
-        if (dir.return_size != 0) {
-            return 0;
-        } 
-    }
-    //TODO: Set errno appropriately
-    return -1;
+    //     if (dir.return_size != 0) {
+    //         return 0;
+    //     } 
+    // }
+    // //TODO: Set errno appropriately
+    // return -1;
     //return(closedir(folder));
 }
 

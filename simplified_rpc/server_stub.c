@@ -18,7 +18,7 @@
 #include <signal.h>
 #include "ece454rpc_types.h"
 
-#if 1 
+#if 0
 #define _DEBUG_1_
 #endif
 
@@ -33,6 +33,8 @@ struct fn {
     int nparams;
     struct fn *next;
 };
+
+char * hostedFolder;
 
 struct fn *fnp = NULL; /* Database of registered functions.
                           Warning: almost no error checking!
@@ -105,7 +107,6 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
     }
 
     int i;
-    printf("NUmber of args got from server: %d\n", *pnparams);
     for(i = 0; i < *pnparams; i++) {
 	arg_type *newarg = (arg_type *)malloc(sizeof(arg_type));
 	recvbytes(s, (void *)(&(newarg->arg_size)), sizeof(int));
@@ -117,8 +118,9 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
 
 	newarg->arg_val = (void *)malloc(newarg->arg_size);
 	recvbytes(s, (void *)(newarg->arg_val), newarg->arg_size);
-
+    printf("argVal: %s\n", (char *)newarg->arg_val);
 	newarg->next = NULL;
+    printf("here\n");
 	if(i == 0) {
 	    *pa = newarg;
 	}
@@ -198,9 +200,7 @@ void returnResult(int s, return_type *ret) {
 
     /* else */
     sendbytes(s, (void *)(&(ret->return_size)), sizeof(int));
-    printf("sent the first size\n");
     sendbytes(s, ret->return_val, ret->return_size);
-    printf("sent the data\n");
 }
 
 void freeArgs(arg_type *a) {
@@ -222,6 +222,16 @@ void freeRet(return_type r) {
     /* else */
 
     free(r.return_val);
+}
+
+void registerMountFolder(char * folderName) {
+    int folderNameLength = strlen(folderName) + 1;
+    hostedFolder = malloc(folderNameLength * sizeof(char));
+    strcpy(hostedFolder, folderName);
+}
+
+char * getHostedFolder() {
+    return hostedFolder;
 }
 
 void launch_server() {
@@ -271,8 +281,6 @@ void launch_server() {
 #endif
 
 	returnResult(asock, &ret);
-
-	printf("finished returning\n");	
 
 	free(fname);
 	freeArgs(a);

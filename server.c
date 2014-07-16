@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include "ece454rpc_types.h"
+#include "simplified_rpc/ece454rpc_types.h"
 
 #if 1
 #define _DEBUG_1_
