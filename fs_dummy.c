@@ -57,11 +57,45 @@ int fsUnmount(const char *localFolderName) {
 }
 
 FSDIR* fsOpenDir(const char *folderName) {
-    return(opendir(folderName));
+
+    if (strncmp(folderName, folderAlias, folderAliasLength) == 0) {
+        char * temp = folderName;
+        temp += folderAliasLength;
+        FSDIR retDir;
+
+        return_type dir = make_remote_call(srvIpOrDomName,
+                                            srvPort,
+                                            "fsOpenDir",
+                                            0);
+
+        if (dir.return_size == 0) {
+            // TODO: Set the errno appropriately
+            // errno = -1;
+            return NULL;
+        } else {
+            retDir = return_type.return_val;
+            return retDir;
+        }
+    }
+
+    //return(opendir(folderName));
 }
 
 int fsCloseDir(FSDIR *folder) {
-    return(closedir(folder));
+
+    if (strcmp(folder->d_name, localFolderName) == 0) {
+        return_type dir = make_remote_call(srvIpOrDomName,
+                                            srvPort,
+                                            "fsCloseDir",
+                                            0);
+
+        if (dir.return_size != 0) {
+            return 0;
+        } 
+    }
+    //TODO: Set errno appropriately
+    return -1;
+    //return(closedir(folder));
 }
 
 struct fsDirent *fsReadDir(FSDIR *folder) {
