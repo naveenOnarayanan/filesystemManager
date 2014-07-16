@@ -100,23 +100,13 @@ int fsOpen(const char *fname, int mode) {
                                               "fsOpen", 2,
                                               strlen(tmp) + 1, tmp,
                                               sizeof(int), (void *) &mode);
-        if (result.return_size == sizeof(int)) {
+
+       if (result.return_size == sizeof(int)) {
             return *(int *)result.return_val;
         }
     }
 
     return 0;
-
- //    int flags = -1;
-
- //    if(mode == 0) {
-	// flags = O_RDONLY;
- //    }
- //    else if(mode == 1) {
-	// flags = O_WRONLY | O_CREAT;
- //    }
-
- //    return(open(fname, flags, S_IRWXU));
 }
 
 int fsClose(int fd) {

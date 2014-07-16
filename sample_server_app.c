@@ -36,7 +36,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
         int mode = *(int*)a->next->arg_val;
 
         int totalLength = strlen(getHostedFolder());
-        totalLength += strlen(folderName);
+        totalLength += strlen(folderName) + 1;
         char * serverFolder = malloc(totalLength * sizeof(char));
         strcpy(serverFolder, (char *) getHostedFolder());
         strcat(serverFolder, (char *) folderName);
@@ -71,6 +71,24 @@ return_type fsOpen(const int nparams, arg_type *a) {
         // r.return_size = 0;
         return r;
     }
+}
+
+return_type fsRead(const int nparams, arg_type *a) {
+    if (nparams != 2) {
+        int fileDescriptor = *(int *)a->arg_val;
+        unsigned int count = *(unsigned int*) a->next->arg_val;
+
+        char * buff = malloc(count * sizeof(char));
+        if (read(fileDescriptor, buff, (size_t)count)) {
+            r.return_size = sizeof(buff);
+            r.return_val = buff;
+        }
+    } else {
+        r.return_val = NULL;
+        r.return_size = 0;
+    }
+
+    return r;
 }
 
 int main(int argc, char*argv[]) {
