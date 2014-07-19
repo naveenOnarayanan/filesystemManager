@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
 
     printf("fsMount(): %d\n", fsMount(argv[1], atoi(argv[2]), argv[3]));
     //printf("fsUnmount(): %d\n", fsUnmount("/home");
+    printf("fsMount(): %d\n", fsMount(argv[1], atoi(argv[2]), argv[3]));
     int dd = fsOpen(argv[4], 0);
     printf("fsOpen(): %d\n", dd);
     if (dd == 0) {
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]) {
 	    char buff[256];
 	    fsRead(dd, (void *)buff, 256);
 	}
+	printf("fsUnmount(): %d\n", fsUnmount(argv[3]));
     // int i;
     // for(i = 0; i < 500; i++) {
 	// //printf("%d\n", ((unsigned char)(fname[i]))%26);

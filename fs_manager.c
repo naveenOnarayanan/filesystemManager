@@ -9,6 +9,7 @@
  * such as opendir() and read() that are made here.
  */
 #include "ece454_fs.h"
+#include "fs_util.c"
 #include "simplified_rpc/ece454rpc_types.h"
 #include <string.h>
 #include <stdlib.h>
@@ -21,23 +22,21 @@ size_t folderAliasLength = 0;
 
 
 int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *localFolderName) {
+    struct mount_list * mount = find_mount(localFolderName);
+    if (mount != NULL) {
+        printf("already mounted\n");
+        return -1;
+    }
+
     return_type check = make_remote_call(srvIpOrDomName,
                                             srvPort,
                                             "isAlive", 0);
     int isServerAlive = *(int *)(check.return_val);
 
     if (isServerAlive == 1) {
-        serverIPOrDomainName = malloc(strlen(srvIpOrDomName) * sizeof(char));
-        strcpy(serverIPOrDomainName, srvIpOrDomName);
 
-        serverPort = srvPort;
-
-        folderAliasLength = strlen(localFolderName);
-        folderAlias = malloc(folderAliasLength * sizeof(char));
-
-        strcpy(folderAlias, localFolderName);
+        add_mount(srvIpOrDomName, srvPort, localFolderName);
         
-        printf("Folder name: %s\n", folderAlias);
         return isServerAlive;
     } else {
         return -1;
@@ -45,15 +44,7 @@ int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *
 }
 
 int fsUnmount(const char *localFolderName) {
-    printf("folderAlias: %s\n", folderAlias);
-    if (strcmp(folderAlias, localFolderName) == 0) {
-        folderAliasLength = 0;
-        serverPort = 0;
-        free(serverIPOrDomainName);
-        free(folderAlias);
-        return 0;
-    }
-    return -1;
+    return remove_mount(localFolderName);
 }
 
 FSDIR* fsOpenDir(const char *folderName) {
@@ -122,22 +113,23 @@ struct fsDirent *fsReadDir(FSDIR *folder) {
 }
 
 int fsOpen(const char *fname, int mode) {
-    printf("serverIP: %s\n", serverIPOrDomainName);
-    printf("serverPort: %d\n", serverPort);
+    struct mount_list * mount = find_mount(fname);
+    if (mount == NULL) {
+        return -1;
+    }
 
-    if (strncmp(fname, folderAlias, folderAliasLength) == 0) {
-        char * tmp = fname;
-        tmp+= folderAliasLength;
+    const char * tmp = mount->localFolder;
+    tmp+= strlen(mount->localFolder);
 
-        return_type result = make_remote_call(serverIPOrDomainName,
-                                              serverPort,
-                                              "fsOpen", 2,
-                                              strlen(tmp) + 1, tmp,
-                                              sizeof(int), (void *) &mode);
+    return_type result = make_remote_call(mount->serverIPorHost,
+                                          mount->serverPort,
+                                          "fsOpen", 2,
+                                          strlen(tmp) + 1, tmp,
+                                          sizeof(int), (void *) &mode);
 
-       if (result.return_size == sizeof(int)) {
-            return *(int *)result.return_val;
-        }
+   if (result.return_size == sizeof(int)) {
+        
+        return *(int *)result.return_val;
     }
 
     return 0;
@@ -148,8 +140,13 @@ int fsClose(int fd) {
 }
 
 int fsRead(int fd, void *buf, const unsigned int count) {
-    return_type result = make_remote_call(serverIPOrDomainName,
-                                          serverPort,
+    struct file_desc_list * file_obj = find_fd(fd);
+    if (file_obj == NULL) {
+        return -1;
+    }
+
+    return_type result = make_remote_call(file_obj->mount->serverIPorHost,
+                                          file_obj->mount->serverPort,
                                           "fsRead", 2,
                                           sizeof(int), (void *) &fd,
                                           sizeof(unsigned int), (void *)&count);

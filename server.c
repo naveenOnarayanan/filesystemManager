@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include "simplified_rpc/ece454rpc_types.h"
-
+#include "s_util.c"
 
 #if 1
 #define _DEBUG_1_
@@ -22,6 +22,7 @@
 return_type r;
 host_folder hostFolder;
 
+
 extern printRegisteredProcedures();
 
 return_type isAlive(const int i, arg_type *a) {
@@ -33,10 +34,16 @@ return_type isAlive(const int i, arg_type *a) {
 }
 
 return_type fsOpen(const int nparams, arg_type *a) {
-    if (nparams == 2) {
-        char * folderName = a->arg_val;
-        int mode = *(int*)a->next->arg_val;
+    if (nparams != 2) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
 
+    char * folderName = a->arg_val;
+    int mode = *(int*)a->next->arg_val;
+
+    if (resource_in_use(folderName, 0) == 0) {
         size_t totalLength = hostFolder.hostedFolderNameLength;
         totalLength += strlen(folderName) + 1;
         char * serverFolder = malloc(totalLength * sizeof(char));
@@ -45,9 +52,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
 
         printf("Final folder name: %s\n", serverFolder);
 
-        // printf("Folder Name: %s%s\n", getHostedFolder(), folderName);
-        // printf("Mode: %d\n", mode);
-
+    
         int flag;
         if (mode == 0) {
             flag = O_RDONLY;
@@ -65,11 +70,32 @@ return_type fsOpen(const int nparams, arg_type *a) {
             r.return_val = NULL;
             r.return_size = 0;
         } else {
+            add_resource(folderName, *fileDescriptor);
+
             r.return_val = (void *)fileDescriptor;
             r.return_size = sizeof(int);
         }
 
         free(serverFolder);
+    } else {
+        r.return_val = NULL;
+        r.return_size = 0;
+    }
+
+    return r;
+}
+
+return_type fsClose(const int nparams, arg_type *a) {
+    if (nparams != 1) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    } 
+
+    int * resource_removed = remove_resource(*(int *)a->arg_val);
+    if (*resource_removed == 1) {
+        r.return_val = (void *) resource_removed;
+        r.return_size = sizeof(int);
     } else {
         r.return_val = NULL;
         r.return_size = 0;
@@ -103,6 +129,61 @@ return_type fsRead(const int nparams, arg_type *a) {
     return r;
 }
 
+return_type fsWrite(const int nparams, arg_type *a) {
+    if (nparams != 3) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
+
+    int fd = a->arg_val;
+    int count = a->next->arg_val;
+
+    arg_type * buff_arg = a->next->next;
+    int buff_length = buff_arg->arg_size;
+    char * buff = malloc(buff_length * sizeof(char));
+    memcpy(buff, buff_arg->arg_val, buff_length);
+
+    int * write_result = write(fd, buf, (size_t)count);
+
+    if (*write_result > -1) {
+        r.return_val = (void *) &write_result;
+        r.return_size = sizeof(int);
+    } else {
+        r.return_val = NULL;
+        r.return_size = 0;
+    }
+
+    return r;
+}
+
+return_type fsRemove(const int nparams, arg_type *a) {
+    if (nparams != 1) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
+
+    if (resource_in_use(a->arg_val) == 0) {
+        int * remove_result = remove(a->arg_val);
+        r.return_val = (void *)&remove_result;
+        r.return_size = sizeof(int);
+    } else {
+        r.return_val = NULL;
+        r.return_size = 0;
+    }
+
+    return r;
+}
+
+return_type fsOpenDir(const int nparams, arg_type *a) {
+    //TODO
+}
+
+return_type fsCloseDir(const int nparams, arg_type *a) {
+    //TODO
+}
+
 void registerMountFolder(const char * folderName) {
     size_t folderNameLen = strlen(folderName) + 1;
     hostFolder.hostedFolderName = malloc(folderNameLen * sizeof(char));
@@ -116,7 +197,10 @@ int main(int argc, char*argv[]) {
         registerMountFolder(argv[1]);
         register_procedure("isAlive", 0, isAlive);
         register_procedure("fsOpen", 2, fsOpen);
+        register_procedure("fsClose", 1, fsClose);
         register_procedure("fsRead", 2, fsRead);
+        register_procedure("fsWrite", 3, fsWrite);
+        register_procedure("fsRemove", 1, fsRemove);
 
 #ifdef _DEBUG_1_
         printRegisteredProcedures();
