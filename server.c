@@ -7,8 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <dirent.h>
 #include "simplified_rpc/ece454rpc_types.h"
 #include "s_util.c"
+
 
 #if 1
 #define _DEBUG_1_
@@ -43,7 +45,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
     char * folderName = a->arg_val;
     int mode = *(int*)a->next->arg_val;
 
-    if (resource_in_use(folderName, 0) == 0) {
+    if (resource_in_use(folderName) == 0) {
         size_t totalLength = hostFolder.hostedFolderNameLength;
         totalLength += strlen(folderName) + 1;
         char * serverFolder = malloc(totalLength * sizeof(char));
@@ -92,7 +94,10 @@ return_type fsClose(const int nparams, arg_type *a) {
         return r;
     } 
 
-    int * resource_removed = remove_resource(*(int *)a->arg_val);
+    int resource_id = *(int *)a->arg_val;
+    int * resource_removed = malloc(sizeof(int));
+    *resource_removed = remove_resource(*(int *)a->arg_val);
+
     if (*resource_removed == 1) {
         r.return_val = (void *) resource_removed;
         r.return_size = sizeof(int);
@@ -136,15 +141,16 @@ return_type fsWrite(const int nparams, arg_type *a) {
         return r;
     }
 
-    int fd = a->arg_val;
-    int count = a->next->arg_val;
+    int fd = *(int*)a->arg_val;
+    int count = *(int *)a->next->arg_val;
 
     arg_type * buff_arg = a->next->next;
     int buff_length = buff_arg->arg_size;
     char * buff = malloc(buff_length * sizeof(char));
     memcpy(buff, buff_arg->arg_val, buff_length);
 
-    int * write_result = write(fd, buf, (size_t)count);
+    int * write_result = malloc(sizeof(int));
+    *write_result = write(fd, buff, (size_t)count);
 
     if (*write_result > -1) {
         r.return_val = (void *) &write_result;
@@ -165,7 +171,9 @@ return_type fsRemove(const int nparams, arg_type *a) {
     }
 
     if (resource_in_use(a->arg_val) == 0) {
-        int * remove_result = remove(a->arg_val);
+        int * remove_result = malloc(sizeof(int));
+        *remove_result = remove(a->arg_val);
+
         r.return_val = (void *)&remove_result;
         r.return_size = sizeof(int);
     } else {
@@ -177,7 +185,24 @@ return_type fsRemove(const int nparams, arg_type *a) {
 }
 
 return_type fsOpenDir(const int nparams, arg_type *a) {
-    //TODO
+    if (nparams != 1) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
+
+    DIR * dir = opendir(a->arg_val);
+
+    if (dir == NULL) {
+        r.return_val = NULL;
+        r.return_size = 0;
+    } else {
+        r.return_val = (void *)dir;
+        r.return_size = sizeof(dir);
+    }
+
+    return r;
+
 }
 
 return_type fsCloseDir(const int nparams, arg_type *a) {
@@ -201,6 +226,7 @@ int main(int argc, char*argv[]) {
         register_procedure("fsRead", 2, fsRead);
         register_procedure("fsWrite", 3, fsWrite);
         register_procedure("fsRemove", 1, fsRemove);
+        register_procedure("fsOpenDir", 1, fsOpenDir);
 
 #ifdef _DEBUG_1_
         printRegisteredProcedures();

@@ -7,7 +7,7 @@ struct resource_queue {
     int fd;
     struct resource_queue * next;
     struct resource_queue * prev;
-}
+};
 
 struct resource_queue * resource_head, * resource_tail;
 

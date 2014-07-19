@@ -12,6 +12,7 @@ struct mount_list{
 
 struct file_desc_list {
 	int fd;
+	char * file_path;
 	struct mount_list * mount;
 	struct file_desc_list * next;
 	struct file_desc_list * prev;
@@ -19,6 +20,9 @@ struct file_desc_list {
 
 struct mount_list * mount_head, * mount_tail;
 struct file_desc_list * fd_head, * fd_tail;
+
+const int FILE_PATH = 0;
+const int FILE_DESCRIPTOR = 1;
 
 struct mount_list * find_mount(const char * folderPath) {
 	struct mount_list * tmp = mount_head;
@@ -34,11 +38,12 @@ struct mount_list * find_mount(const char * folderPath) {
 	return NULL;
 }
 
-struct file_desc_list * find_fd(const int fd) {
+struct file_desc_list * find_fd(const void * id, int id_type) {
 	struct file_desc_list * tmp = fd_head;
 
 	while (tmp != NULL) {
-		if (tmp->fd == fd) {
+		if ((id_type == 0 && tmp->fd == *(int *)id) 
+				|| (id_type == 1 && strcmp(tmp->file_path, id))) {
 			return tmp;
 		}
 		tmp = tmp->next;
@@ -114,7 +119,7 @@ void add_mount(const char * srvIpOrDomName, const int srvPort, const char * loca
 }
 
 int remove_fd(const int fd) {
-	struct file_desc_list * fd_obj = find_fd(fd);
+	struct file_desc_list * fd_obj = find_fd(&fd, FILE_DESCRIPTOR);
 
 	if (fd_obj == NULL) {
 		return -1;

@@ -118,8 +118,12 @@ int fsOpen(const char *fname, int mode) {
         return -1;
     }
 
-    const char * tmp = mount->localFolder;
+    printf("Mount folder: %s\n", mount->localFolder);
+
+    const char * tmp = fname;
     tmp+= strlen(mount->localFolder);
+
+    printf("OPEN: %s\n", tmp);
 
     return_type result = make_remote_call(mount->serverIPorHost,
                                           mount->serverPort,
@@ -136,11 +140,25 @@ int fsOpen(const char *fname, int mode) {
 }
 
 int fsClose(int fd) {
-    return(close(fd));
+    struct file_desc_list * fd_obj = find_fd(&fd, FILE_DESCRIPTOR);
+    if (fd_obj == NULL) {
+        return -1;
+    }
+
+    return_type result = make_remote_call(fd_obj->mount->serverIPorHost,
+                                          fd_obj->mount->serverPort,
+                                          "fsClose", 1,
+                                          sizeof(int), fd);
+
+    if (result.return_size > 0) {
+        return remove_fd(fd);
+    } else {
+        return -1;
+    }
 }
 
 int fsRead(int fd, void *buf, const unsigned int count) {
-    struct file_desc_list * file_obj = find_fd(fd);
+    struct file_desc_list * file_obj = find_fd(&fd, FILE_DESCRIPTOR);
     if (file_obj == NULL) {
         return -1;
     }
@@ -165,9 +183,39 @@ int fsRead(int fd, void *buf, const unsigned int count) {
 }
 
 int fsWrite(int fd, const void *buf, const unsigned int count) {
-    return(write(fd, buf, (size_t)count)); 
+    struct file_desc_list * file_obj = find_fd(&fd, FILE_DESCRIPTOR);
+    if (file_obj == NULL) {
+        return -1;
+    }
+
+    return_type result = make_remote_call(file_obj->mount->serverIPorHost,
+                                          file_obj->mount->serverPort,
+                                          "fsWrite", 3,
+                                          sizeof(int), (void *) &fd,
+                                          sizeof(unsigned int), (void *)&count,
+                                          sizeof(buf), buf);
+
+    if (result.return_size == 0) {
+        return -1;
+    }
+
+    return *(int *)result.return_val;
 }
 
 int fsRemove(const char *name) {
-    return(remove(name));
+    struct file_desc_list * file_obj = find_fd(name, FILE_PATH);
+    if (file_obj == NULL) {
+        return -1;
+    }
+
+    return_type result = make_remote_call(file_obj->mount->serverIPorHost,
+                                          file_obj->mount->serverPort,
+                                          "fsWrite", 3,
+                                          strlen(name) + 1, name);
+
+    if (result.return_size == 0) {
+        return -1;
+    }
+
+    return *(int *)result.return_val;
 }
