@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct dir_list {
+	FSDIR * dir;
+	struct mount_list * mount;
+	struct dir_list * next;
+	struct dir_list * prev;
+};
+
 struct mount_list{
 	char * serverIPorHost;
 	int serverPort;
@@ -18,6 +25,7 @@ struct file_desc_list {
 	struct file_desc_list * prev;
 };
 
+struct dir_list * dir_head, * dir_tail;
 struct mount_list * mount_head, * mount_tail;
 struct file_desc_list * fd_head, * fd_tail;
 
@@ -50,6 +58,62 @@ struct file_desc_list * find_fd(const void * id, int id_type) {
 	}
 
 	return NULL;
+}
+
+struct dir_list * find_dir(FSDIR * dir) {
+	struct dir_list * tmp = dir_head;
+
+	while (tmp != NULL) {
+		if (tmp->dir == dir) {
+			return tmp;
+		}
+		tmp = tmp->next;
+	}
+
+	return NULL;
+}
+
+int remove_dir(FSDIR * dir) {
+	struct dir_list * dir_obj = find_dir(dir);
+	if (dir_obj == NULL) {
+		return -1;
+	}
+
+	if (dir_obj->prev == NULL) {
+		dir_head = dir_obj->next;
+		if (dir_head != NULL) {
+			dir_head->prev = NULL;
+		}
+	} else {
+		struct dir_list * tmp = dir_obj->prev;
+
+		tmp->next = dir_obj->next;
+		if (tmp->next != NULL) {
+			tmp->next->prev = tmp;
+		} else {
+			dir_tail = tmp;
+		}
+	}
+
+	free(dir_obj->dir);
+	free(dir_obj);
+
+	return 0;
+}
+
+void add_dir(FSDIR * dir, struct mount_list * mount) {
+	struct dir_list * dir_obj = malloc(sizeof(struct dir_list));
+	dir_obj->dir = dir;
+	dir_obj->mount = mount;
+
+	if (dir_head == NULL) {
+		dir_head = dir_obj;
+		dir_tail = dir_obj;
+	} else {
+		dir_tail->next = dir_obj;
+		dir_obj->prev = dir_tail;
+		dir_tail = dir_tail->next;
+	}
 }
 
 int remove_mount(const char * localFolderName) {
@@ -158,4 +222,10 @@ void add_fd(struct mount_list * mount, int fd) {
 		fd_obj->prev = fd_tail;
 		fd_tail = fd_tail->next;
 	}
+}
+
+const char * get_relative_path(const char * path, struct mount_list * mount) {
+	const char * tmp = path;
+    tmp+= strlen(mount->localFolder);
+    return tmp;
 }

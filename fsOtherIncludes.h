@@ -10,6 +10,6 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-typedef DIR FSDIR;
+typedef int FSDIR;
 
 #endif

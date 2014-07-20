@@ -18,7 +18,7 @@
 #include <signal.h>
 #include "ece454rpc_types.h"
 
-#if 0
+#if 1
 #define _DEBUG_1_
 #endif
 

@@ -48,6 +48,35 @@ int fsUnmount(const char *localFolderName) {
 }
 
 FSDIR* fsOpenDir(const char *folderName) {
+    printf("The folder is called: %s\n", folderName);
+    struct mount_list * mount = find_mount(folderName);
+    printf("Mount returned: %s\n", mount->serverIPorHost);
+    if (mount == NULL) {
+        return NULL;
+    }
+
+    const char * path = get_relative_path(folderName, mount);
+
+    printf("Relative folder path: %s\n", path);
+
+    return_type result = make_remote_call(mount->serverIPorHost,
+                                          mount->serverPort,
+                                          "fsOpenDir", 1,
+                                          strlen(path) + 1, path);
+
+    printf("returned from call\n");
+    if (result.return_size == 0) {
+        return NULL;
+    }
+
+    printf("Returned val: %d\n", *(int *)result.return_val);
+
+    FSDIR * dir = (FSDIR *) result.return_val;
+    add_dir(dir, mount);
+
+    return dir;
+
+
 
     // if (strncmp(folderName, folderAlias, folderAliasLength) == 0) {
     //     char * temp = folderName;
@@ -74,6 +103,7 @@ FSDIR* fsOpenDir(const char *folderName) {
 
 int fsCloseDir(FSDIR *folder) {
 
+
     // if (strcmp(folder->d_name, localFolderName) == 0) {
     //     return_type dir = make_remote_call(srvIpOrDomName,
     //                                         srvPort,
@@ -89,27 +119,48 @@ int fsCloseDir(FSDIR *folder) {
     //return(closedir(folder));
 }
 
-struct fsDirent *fsReadDir(FSDIR *folder) {
-    const int initErrno = errno;
-    struct dirent *d = readdir(folder);
+struct fsDirent * fsReadDir(FSDIR *folder){
+    printf("ReadDir ptr: %p\n", folder);
+    struct dir_list * dir_obj = find_dir(folder);
 
-    if(d == NULL) {
-	if(errno == initErrno) errno = 0;
-	return NULL;
-    }
-
-    if(d->d_type == DT_DIR) {
-	dent.entType = 1;
-    }
-    else if(d->d_type == DT_REG) {
-	dent.entType = 0;
-    }
-    else {
-	dent.entType = -1;
+    if (dir_obj == NULL) {
+        return NULL;
     }
 
-    memcpy(&(dent.entName), &(d->d_name), 256);
-    return &dent;
+    return_type result = make_remote_call(dir_obj->mount->serverIPorHost,
+                                          dir_obj->mount->serverPort,
+                                          "fsReadDir", 1,
+                                          sizeof(folder), folder);
+
+    struct fsDirent * fsdir = result.return_val;
+    printf("READ DIR: %s\n", fsdir->entName);
+
+    if (result.return_size == 0) {
+        return NULL;
+    } else {
+        return (struct fsDirent *) result.return_val;
+    }
+
+ //    const int initErrno = errno;
+ //    struct dirent *d = readdir(folder);
+
+ //    if(d == NULL) {
+	// if(errno == initErrno) errno = 0;
+	// return NULL;
+ //    }
+
+ //    if(d->d_type == DT_DIR) {
+	// dent.entType = 1;
+ //    }
+ //    else if(d->d_type == DT_REG) {
+	// dent.entType = 0;
+ //    }
+ //    else {
+	// dent.entType = -1;
+ //    }
+
+ //    memcpy(&(dent.entName), &(d->d_name), 256);
+ //    return &dent;
 }
 
 int fsOpen(const char *fname, int mode) {
@@ -120,15 +171,14 @@ int fsOpen(const char *fname, int mode) {
 
     printf("Mount folder: %s\n", mount->localFolder);
 
-    const char * tmp = fname;
-    tmp+= strlen(mount->localFolder);
+    const char * path = get_relative_path(fname, mount);
 
-    printf("OPEN: %s\n", tmp);
+    printf("OPEN: %s\n", path);
 
     return_type result = make_remote_call(mount->serverIPorHost,
                                           mount->serverPort,
                                           "fsOpen", 2,
-                                          strlen(tmp) + 1, tmp,
+                                          strlen(path) + 1, path,
                                           sizeof(int), (void *) &mode);
 
    if (result.return_size == sizeof(int)) {

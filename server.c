@@ -185,11 +185,14 @@ return_type fsRemove(const int nparams, arg_type *a) {
 }
 
 return_type fsOpenDir(const int nparams, arg_type *a) {
+    printf("The number of parameters: %d\n", nparams);
     if (nparams != 1) {
         r.return_val = NULL;
         r.return_size = 0;
         return r;
     }
+
+    printf("Trying to open dir: %s\n", (char *)a->arg_val);
 
     DIR * dir = opendir(a->arg_val);
 
@@ -197,8 +200,14 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
         r.return_val = NULL;
         r.return_size = 0;
     } else {
-        r.return_val = (void *)dir;
-        r.return_size = sizeof(dir);
+        int * id = malloc(sizeof(int));
+        printf("ID: %p\n", id);
+        *id = add_dir(dir);
+        printf("ID: %p\n", id);
+        printf("ID: %d\n", *id);
+
+        r.return_val = (void *) id;
+        r.return_size = sizeof(int);
     }
 
     return r;
@@ -206,7 +215,75 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
 }
 
 return_type fsCloseDir(const int nparams, arg_type *a) {
-    //TODO
+    if (nparams != 1) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
+
+    struct dir_queue * dir = find_dir(*(int *)a->arg_val);
+
+    if (dir == NULL) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
+
+    int * close_dir_result = malloc(sizeof(int));
+    *close_dir_result = closedir(dir->dir);
+
+    if (*close_dir_result == 0) {
+        remove_dir(*(int *)a->arg_val);
+    }
+
+    r.return_val = (void *)close_dir_result;
+    r.return_size = sizeof(int);
+    return r;
+}
+
+return_type fsReadDir(const int nparams, arg_type *a) {
+    if (nparams != 1) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
+
+    int id = *(int *) a->arg_val;
+    struct dir_queue * dir = find_dir(id);
+    if (dir == NULL) {
+        r.return_val = NULL;
+        r.return_size = 0;
+        return r;
+    }
+
+    struct dirent * dir_info = readdir(dir->dir);
+    printf("Directory info: %p\n", dir_info);
+    printf("Dirent: %s\n", dir_info->d_name);
+    if (dir_info == NULL) {
+        r.return_val = NULL;
+        r.return_size = 0;
+    } else {
+        printf("Size of dir_info: %lu\n", sizeof(dir_info));
+        
+        struct fsDirent * dirent = malloc(sizeof(struct fsDirent));
+
+        if(dir_info->d_type == DT_DIR) {
+            dirent->entType = 1;
+        }
+        else if(dir_info->d_type == DT_REG) {
+            dirent->entType = 0;
+        }
+        else {
+            dirent->entType = -1;
+        }
+
+        memcpy(&dirent->entName, &dir_info->d_name, 256);
+
+        r.return_size = sizeof(struct fsDirent);
+        r.return_val = (void *)dirent;
+    }
+
+    return r;
 }
 
 void registerMountFolder(const char * folderName) {
@@ -227,6 +304,7 @@ int main(int argc, char*argv[]) {
         register_procedure("fsWrite", 3, fsWrite);
         register_procedure("fsRemove", 1, fsRemove);
         register_procedure("fsOpenDir", 1, fsOpenDir);
+        register_procedure("fsReadDir", 1, fsReadDir);
 
 #ifdef _DEBUG_1_
         printRegisteredProcedures();

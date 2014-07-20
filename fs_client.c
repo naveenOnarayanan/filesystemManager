@@ -14,15 +14,23 @@ int main(int argc, char *argv[]) {
 
     printf("fsMount(): %d\n", fsMount(argv[1], atoi(argv[2]), argv[3]));
     //printf("fsUnmount(): %d\n", fsUnmount("/home");
-    printf("fsMount(): %d\n", fsMount(argv[1], atoi(argv[2]), argv[3]));
-    int dd = fsOpen(argv[4], 0);
-    printf("fsOpen(): %d\n", dd);
-    if (dd == 0) {
-    	printf("Unable to find file\n");
-    } else {
-	    char buff[256];
-	    fsRead(dd, (void *)buff, 256);
-	}
+ //    printf("fsMount(): %d\n", fsMount(argv[1], atoi(argv[2]), argv[3]));
+ //    int dd = fsOpen(argv[4], 0);
+ //    printf("fsOpen(): %d\n", dd);
+ //    if (dd == 0) {
+ //    	printf("Unable to find file\n");
+ //    } else {
+	//     char buff[256];
+	//     fsRead(dd, (void *)buff, 256);
+	// }
+	size_t arg_size = strlen(argv[3]) + 2;
+	char * thirdArg = malloc(sizeof(arg_size) * sizeof(char));
+	strcpy(thirdArg, argv[3]);
+	strcat(thirdArg, "/");
+	printf("Third Arg: %s\n", thirdArg);
+
+	FSDIR * fsdir = fsOpenDir(thirdArg);
+	fsReadDir(fsdir);
 	printf("fsUnmount(): %d\n", fsUnmount(argv[3]));
     // int i;
     // for(i = 0; i < 500; i++) {
