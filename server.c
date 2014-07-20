@@ -22,7 +22,6 @@
  * response to the client. */
 
 return_type r;
-host_folder hostFolder;
 
 
 extern printRegisteredProcedures();
@@ -46,11 +45,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
     int mode = *(int*)a->next->arg_val;
 
     if (resource_in_use(folderName) == 0) {
-        size_t totalLength = hostFolder.hostedFolderNameLength;
-        totalLength += strlen(folderName) + 1;
-        char * serverFolder = malloc(totalLength * sizeof(char));
-        strcpy(serverFolder, (char *) hostFolder.hostedFolderName);
-        strcat(serverFolder, (char *) folderName);
+        char * serverFolder = append_local_path(folderName);
 
         printf("Final folder name: %s\n", serverFolder);
 
@@ -194,7 +189,8 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
 
     printf("Trying to open dir: %s\n", (char *)a->arg_val);
 
-    DIR * dir = opendir(a->arg_val);
+    char * serverFolder = append_local_path(a->arg_val);
+    DIR * dir = opendir(serverFolder);
 
     if (dir == NULL) {
         r.return_val = NULL;
@@ -209,7 +205,7 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
         r.return_val = (void *) id;
         r.return_size = sizeof(int);
     }
-
+    free(serverFolder);
     return r;
 
 }

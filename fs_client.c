@@ -31,6 +31,13 @@ int main(int argc, char *argv[]) {
 
 	FSDIR * fsdir = fsOpenDir(thirdArg);
 	fsReadDir(fsdir);
+	fsReadDir(fsdir);
+	fsReadDir(fsdir);
+	fsReadDir(fsdir);
+	fsReadDir(fsdir);
+	fsReadDir(fsdir);
+	fsReadDir(fsdir);
+	fsReadDir(fsdir);
 	printf("fsUnmount(): %d\n", fsUnmount(argv[3]));
     // int i;
     // for(i = 0; i < 500; i++) {

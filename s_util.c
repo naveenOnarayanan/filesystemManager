@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+host_folder hostFolder;
+
 struct fsDirent {
     char entName[256];
     unsigned char entType; /* 0 for file, 1 for folder,
@@ -146,4 +148,15 @@ void add_resource(const char * path, const int fd){
     resource->prev = resource_tail;
     resource_tail = resource_tail->next;
   }
+}
+
+char * append_local_path(char * folderName) {
+  size_t totalLength = hostFolder.hostedFolderNameLength;
+  totalLength += strlen(folderName) + 1;
+
+  char * serverFolder = malloc(totalLength * sizeof(char));
+  strcpy(serverFolder, (char *) hostFolder.hostedFolderName);
+  strcat(serverFolder, (char *) folderName);
+
+  return serverFolder;
 }
