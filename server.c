@@ -28,6 +28,7 @@ extern printRegisteredProcedures();
 return_type isAlive(const int i, arg_type *a) {
     int* isAlive = (int *)malloc(sizeof(int));
     *isAlive = 1;
+    r.in_error = 1;
     r.return_val = (void*)isAlive;
     r.return_size = sizeof(int);
     return r;
