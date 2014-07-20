@@ -77,7 +77,6 @@ int remove_dir(const int id) {
   }
 
   dir_size--;
-  free(tmp->dir);
   free(tmp);
 
   return 0;

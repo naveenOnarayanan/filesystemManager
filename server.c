@@ -23,7 +23,6 @@
 
 return_type r;
 
-
 extern printRegisteredProcedures();
 
 return_type isAlive(const int i, arg_type *a) {
@@ -109,15 +108,12 @@ return_type fsRead(const int nparams, arg_type *a) {
         int fileDescriptor = *(int *)a->arg_val;
         unsigned int count = *(unsigned int*) a->next->arg_val;
         printf("File descriptor: %d\n", fileDescriptor);
-        printf("Count: %d\n", count);
         char * buff = malloc(count * sizeof(char));
-        if (read(fileDescriptor, buff, (size_t)count) >= 0) {
-            printf("Was able to read file\n");
-            r.return_size = strlen(buff);
+        int total_read = read(fileDescriptor, buff, (size_t)count);
+        if (total_read >= 0) {
+            r.return_size = total_read;
             r.return_val = buff;
-            printBuf(buff, 256);
         } else {
-            printf("read return: %d\n", read(fileDescriptor, buff, (size_t)count));
             printf("Oh no! %s\n", strerror(errno));
         }
     } else {
@@ -147,8 +143,10 @@ return_type fsWrite(const int nparams, arg_type *a) {
     int * write_result = malloc(sizeof(int));
     *write_result = write(fd, buff, (size_t)count);
 
+    printf("The write result: %d\n", *write_result);
+
     if (*write_result > -1) {
-        r.return_val = (void *) &write_result;
+        r.return_val = (void *) write_result;
         r.return_size = sizeof(int);
     } else {
         r.return_val = NULL;
@@ -167,9 +165,13 @@ return_type fsRemove(const int nparams, arg_type *a) {
 
     if (resource_in_use(a->arg_val) == 0) {
         int * remove_result = malloc(sizeof(int));
-        *remove_result = remove(a->arg_val);
+        char * folderName = append_local_path(a->arg_val);
+        printf("Folder to remove: %s\n", folderName);
 
-        r.return_val = (void *)&remove_result;
+        *remove_result = remove(folderName);
+        printf("Print the error: %s\n",strerror(errno));
+
+        r.return_val = (void *)remove_result;
         r.return_size = sizeof(int);
     } else {
         r.return_val = NULL;
@@ -225,8 +227,11 @@ return_type fsCloseDir(const int nparams, arg_type *a) {
         return r;
     }
 
+
     int * close_dir_result = malloc(sizeof(int));
     *close_dir_result = closedir(dir->dir);
+
+    printf("Closing dir: %d\n", *close_dir_result);
 
     if (*close_dir_result == 0) {
         remove_dir(*(int *)a->arg_val);
@@ -253,12 +258,12 @@ return_type fsReadDir(const int nparams, arg_type *a) {
     }
 
     struct dirent * dir_info = readdir(dir->dir);
-    printf("Directory info: %p\n", dir_info);
-    printf("Dirent: %s\n", dir_info->d_name);
     if (dir_info == NULL) {
         r.return_val = NULL;
         r.return_size = 0;
     } else {
+        printf("Directory info: %p\n", dir_info);
+        printf("Dirent: %s\n", dir_info->d_name);
         printf("Size of dir_info: %lu\n", sizeof(dir_info));
         
         struct fsDirent * dirent = malloc(sizeof(struct fsDirent));
@@ -301,6 +306,7 @@ int main(int argc, char*argv[]) {
         register_procedure("fsRemove", 1, fsRemove);
         register_procedure("fsOpenDir", 1, fsOpenDir);
         register_procedure("fsReadDir", 1, fsReadDir);
+        register_procedure("fsCloseDir", 1, fsCloseDir);
 
 #ifdef _DEBUG_1_
         printRegisteredProcedures();

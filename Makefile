@@ -13,7 +13,7 @@ fs_client: libstubs.a fs_client.o
 	gcc fs_client.o -L. -lstubs -o fsclient
 
 $(OBJECTS): %.o: %.c ece454_fs.h simplified_rpc/ece454rpc_types.h
-	gcc -c $< -o $@	
+	gcc -g -c $< -o $@	
 	
 
 libstubs.a: simplified_rpc/server_stub.o simplified_rpc/client_stub.o simplified_rpc/helper.o simplified_rpc/mybind.o fs_manager.o

@@ -102,21 +102,23 @@ FSDIR* fsOpenDir(const char *folderName) {
 }
 
 int fsCloseDir(FSDIR *folder) {
+    struct dir_list * dir_obj = find_dir(folder);
+    if (dir_obj == NULL) {
+        return -1;
+    }
+
+    return_type result = make_remote_call(dir_obj->mount->serverIPorHost,
+                                          dir_obj->mount->serverPort,
+                                          "fsCloseDir", 1,
+                                          sizeof(folder), folder);
+
+    if (result.return_size == 0) {
+        return -1;
+    } else {
+        return *(int *)result.return_val;
+    }
 
 
-    // if (strcmp(folder->d_name, localFolderName) == 0) {
-    //     return_type dir = make_remote_call(srvIpOrDomName,
-    //                                         srvPort,
-    //                                         "fsCloseDir",
-    //                                         0);
-
-    //     if (dir.return_size != 0) {
-    //         return 0;
-    //     } 
-    // }
-    // //TODO: Set errno appropriately
-    // return -1;
-    //return(closedir(folder));
 }
 
 struct fsDirent * fsReadDir(FSDIR *folder){
@@ -181,9 +183,12 @@ int fsOpen(const char *fname, int mode) {
                                           strlen(path) + 1, path,
                                           sizeof(int), (void *) &mode);
 
+    printf("Return val for fsOpen: %d\n", *(int *)result.return_val);
+
    if (result.return_size == sizeof(int)) {
-        
-        return *(int *)result.return_val;
+        int fd = *(int *)result.return_val;
+        add_fd(mount, fd);
+        return fd;
     }
 
     return 0;
@@ -198,7 +203,7 @@ int fsClose(int fd) {
     return_type result = make_remote_call(fd_obj->mount->serverIPorHost,
                                           fd_obj->mount->serverPort,
                                           "fsClose", 1,
-                                          sizeof(int), fd);
+                                          sizeof(int), &fd);
 
     if (result.return_size > 0) {
         return remove_fd(fd);
@@ -227,7 +232,7 @@ int fsRead(int fd, void *buf, const unsigned int count) {
     printBuf(result.return_val, result.return_size);
 
     memcpy(buf, result.return_val, result.return_size);
-    return 0;
+    return result.return_size;
 
     //return(read(fd, buf, (size_t)count));
 }
@@ -238,12 +243,13 @@ int fsWrite(int fd, const void *buf, const unsigned int count) {
         return -1;
     }
 
+    printf("Size of buff to write: %lu\n", strlen(buf));
     return_type result = make_remote_call(file_obj->mount->serverIPorHost,
                                           file_obj->mount->serverPort,
                                           "fsWrite", 3,
                                           sizeof(int), (void *) &fd,
                                           sizeof(unsigned int), (void *)&count,
-                                          sizeof(buf), buf);
+                                          count, buf);
 
     if (result.return_size == 0) {
         return -1;
@@ -253,16 +259,20 @@ int fsWrite(int fd, const void *buf, const unsigned int count) {
 }
 
 int fsRemove(const char *name) {
-    struct file_desc_list * file_obj = find_fd(name, FILE_PATH);
-    if (file_obj == NULL) {
+    struct mount_list * mount = find_mount(name);
+    printf("MOUNT FOUND IN REMOVE: %p\n", mount);
+    if (mount == NULL) {
         return -1;
     }
 
-    return_type result = make_remote_call(file_obj->mount->serverIPorHost,
-                                          file_obj->mount->serverPort,
-                                          "fsWrite", 3,
-                                          strlen(name) + 1, name);
+    char * relative_path = get_relative_path(name, mount);
 
+    return_type result = make_remote_call(mount->serverIPorHost,
+                                          mount->serverPort,
+                                          "fsRemove", 1,
+                                          strlen(relative_path) + 1, relative_path);
+
+    printf("Result returned: %d\n", result.return_size);
     if (result.return_size == 0) {
         return -1;
     }

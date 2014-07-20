@@ -50,8 +50,8 @@ struct file_desc_list * find_fd(const void * id, int id_type) {
 	struct file_desc_list * tmp = fd_head;
 
 	while (tmp != NULL) {
-		if ((id_type == 0 && tmp->fd == *(int *)id) 
-				|| (id_type == 1 && strcmp(tmp->file_path, id))) {
+		if ((id_type == FILE_DESCRIPTOR && tmp->fd == *(int *)id) 
+				|| (id_type == FILE_PATH && strcmp(tmp->file_path, id))) {
 			return tmp;
 		}
 		tmp = tmp->next;
