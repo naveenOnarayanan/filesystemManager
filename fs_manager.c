@@ -13,6 +13,7 @@
 #include "simplified_rpc/ece454rpc_types.h"
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 struct fsDirent dent;
 char * folderAlias;
@@ -31,6 +32,15 @@ int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *
     return_type check = make_remote_call(srvIpOrDomName,
                                             srvPort,
                                             "isAlive", 0);
+
+    int inError = *(int *)(check.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(check.return_val);
+        errno = errorNum;
+        return -1;
+    }
+
     int isServerAlive = *(int *)(check.return_val);
 
     if (isServerAlive == 1) {
@@ -65,8 +75,11 @@ FSDIR* fsOpenDir(const char *folderName) {
                                           strlen(path) + 1, path);
 
     printf("returned from call\n");
-    if (result.return_size == 0) {
-        return NULL;
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
     }
 
     printf("Returned val: %d\n", *(int *)result.return_val);
@@ -112,6 +125,14 @@ int fsCloseDir(FSDIR *folder) {
                                           "fsCloseDir", 1,
                                           sizeof(folder), folder);
 
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
+        return -1;
+    }
+
     if (result.return_size == 0) {
         return -1;
     } else {
@@ -133,6 +154,14 @@ struct fsDirent * fsReadDir(FSDIR *folder){
                                           dir_obj->mount->serverPort,
                                           "fsReadDir", 1,
                                           sizeof(folder), folder);
+
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
+        return NULL;
+    }
 
     struct fsDirent * fsdir = result.return_val;
     printf("READ DIR: %s\n", fsdir->entName);
@@ -185,6 +214,14 @@ int fsOpen(const char *fname, int mode) {
 
     printf("Return val for fsOpen: %d\n", *(int *)result.return_val);
 
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
+        return -1;
+    }
+
    if (result.return_size == sizeof(int)) {
         int fd = *(int *)result.return_val;
         add_fd(mount, fd);
@@ -205,6 +242,14 @@ int fsClose(int fd) {
                                           "fsClose", 1,
                                           sizeof(int), &fd);
 
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
+        return -1;
+    }
+
     if (result.return_size > 0) {
         return remove_fd(fd);
     } else {
@@ -223,6 +268,14 @@ int fsRead(int fd, void *buf, const unsigned int count) {
                                           "fsRead", 2,
                                           sizeof(int), (void *) &fd,
                                           sizeof(unsigned int), (void *)&count);
+
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
+        return -1;
+    }
 
     if (result.return_size == 0) {
         return -1;
@@ -251,6 +304,14 @@ int fsWrite(int fd, const void *buf, const unsigned int count) {
                                           sizeof(unsigned int), (void *)&count,
                                           count, buf);
 
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
+        return -1;
+    }
+
     if (result.return_size == 0) {
         return -1;
     }
@@ -271,6 +332,14 @@ int fsRemove(const char *name) {
                                           mount->serverPort,
                                           "fsRemove", 1,
                                           strlen(relative_path) + 1, relative_path);
+
+    int inError = *(int *)(result.in_error);
+
+    if (inError == 1) {
+        int errorNum = *(int *)(result.return_val);
+        errno = errorNum;
+        return -1;
+    }
 
     printf("Result returned: %d\n", result.return_size);
     if (result.return_size == 0) {
