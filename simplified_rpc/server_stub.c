@@ -197,6 +197,7 @@ void returnResult(int s, return_type *ret) {
 #endif
 
     /* else */
+    sendbytes(s, (void *)(&(ret->in_error)), sizeof(int));
     sendbytes(s, (void *)(&(ret->return_size)), sizeof(int));
     sendbytes(s, ret->return_val, ret->return_size);
 }

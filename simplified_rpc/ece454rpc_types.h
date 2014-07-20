@@ -5,6 +5,7 @@
 typedef struct {
     void   *return_val;
     int    return_size;
+    int    in_error;
 } return_type;
 
 /* arg list */

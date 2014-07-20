@@ -35,8 +35,9 @@ return_type isAlive(const int i, arg_type *a) {
 
 return_type fsOpen(const int nparams, arg_type *a) {
     if (nparams != 2) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.in_error = 1;
+        r.return_size = sizeof(int);
         return r;
     }
 
@@ -63,19 +64,22 @@ return_type fsOpen(const int nparams, arg_type *a) {
         printf("FileDescriptor: %d\n", *fileDescriptor);
 
         if (*fileDescriptor < 0) {
-            r.return_val = NULL;
-            r.return_size = 0;
+            r.return_val = set_error(EBADF);
+            r.in_error = 1;
+            r.return_size = sizeof(int);
         } else {
             add_resource(folderName, *fileDescriptor);
 
             r.return_val = (void *)fileDescriptor;
             r.return_size = sizeof(int);
+            r.in_error = 0;
         }
 
         free(serverFolder);
     } else {
-        r.return_val = NULL;
+        r.return_val = set_error(EBUSY);
         r.return_size = 0;
+        r.in_error = 1;
     }
 
     return r;
@@ -83,8 +87,9 @@ return_type fsOpen(const int nparams, arg_type *a) {
 
 return_type fsClose(const int nparams, arg_type *a) {
     if (nparams != 1) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     } 
 
@@ -95,9 +100,11 @@ return_type fsClose(const int nparams, arg_type *a) {
     if (*resource_removed == 1) {
         r.return_val = (void *) resource_removed;
         r.return_size = sizeof(int);
+        r.in_error = 0;
     } else {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EBUSY);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
     }
     return r;
 }
@@ -113,13 +120,15 @@ return_type fsRead(const int nparams, arg_type *a) {
         if (total_read >= 0) {
             r.return_size = total_read;
             r.return_val = buff;
+            r.in_error = 0;
         } else {
             printf("Oh no! %s\n", strerror(errno));
         }
     } else {
         printf("Number of parameters dont match! %d\n", nparams);
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
     }
 
     return r;
@@ -127,8 +136,9 @@ return_type fsRead(const int nparams, arg_type *a) {
 
 return_type fsWrite(const int nparams, arg_type *a) {
     if (nparams != 3) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     }
 
@@ -148,9 +158,13 @@ return_type fsWrite(const int nparams, arg_type *a) {
     if (*write_result > -1) {
         r.return_val = (void *) write_result;
         r.return_size = sizeof(int);
+        r.in_error = 0;
     } else {
-        r.return_val = NULL;
-        r.return_size = 0;
+        // Don't know which one is more appropriate in this case
+        r.return_val = set_error(EPERM); // Operation not permitted
+        //r.return_val = set_error(EAGAIN); // Try Again
+        r.return_size = sizeof(int);
+        r.in_error = 1;
     }
 
     return r;
@@ -158,8 +172,9 @@ return_type fsWrite(const int nparams, arg_type *a) {
 
 return_type fsRemove(const int nparams, arg_type *a) {
     if (nparams != 1) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     }
 
@@ -173,9 +188,11 @@ return_type fsRemove(const int nparams, arg_type *a) {
 
         r.return_val = (void *)remove_result;
         r.return_size = sizeof(int);
+        r.in_error = 0;
     } else {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EBUSY); // Resource is busy
+        r.return_size = sizeof(int);
+        r.in_error = 1;
     }
 
     return r;
@@ -184,8 +201,9 @@ return_type fsRemove(const int nparams, arg_type *a) {
 return_type fsOpenDir(const int nparams, arg_type *a) {
     printf("The number of parameters: %d\n", nparams);
     if (nparams != 1) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     }
 
@@ -195,8 +213,9 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
     DIR * dir = opendir(serverFolder);
 
     if (dir == NULL) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(ENOTDIR);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
     } else {
         int * id = malloc(sizeof(int));
         printf("ID: %p\n", id);
@@ -206,6 +225,7 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
 
         r.return_val = (void *) id;
         r.return_size = sizeof(int);
+        r.in_error = 0;
     }
     free(serverFolder);
     return r;
@@ -214,16 +234,18 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
 
 return_type fsCloseDir(const int nparams, arg_type *a) {
     if (nparams != 1) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     }
 
     struct dir_queue * dir = find_dir(*(int *)a->arg_val);
 
     if (dir == NULL) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(ENOTDIR);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     }
 
@@ -239,28 +261,32 @@ return_type fsCloseDir(const int nparams, arg_type *a) {
 
     r.return_val = (void *)close_dir_result;
     r.return_size = sizeof(int);
+    r.in_error = 0;
     return r;
 }
 
 return_type fsReadDir(const int nparams, arg_type *a) {
     if (nparams != 1) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(EINVAL);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     }
 
     int id = *(int *) a->arg_val;
     struct dir_queue * dir = find_dir(id);
     if (dir == NULL) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(ENOTDIR);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
         return r;
     }
 
     struct dirent * dir_info = readdir(dir->dir);
     if (dir_info == NULL) {
-        r.return_val = NULL;
-        r.return_size = 0;
+        r.return_val = set_error(ENOENT);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
     } else {
         printf("Directory info: %p\n", dir_info);
         printf("Dirent: %s\n", dir_info->d_name);
@@ -282,6 +308,7 @@ return_type fsReadDir(const int nparams, arg_type *a) {
 
         r.return_size = sizeof(struct fsDirent);
         r.return_val = (void *)dirent;
+        r.in_error = 0;
     }
 
     return r;

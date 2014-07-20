@@ -92,6 +92,8 @@ return_type make_remote_call(const char *servernameorip,
     va_end(ap);
 
     /* Get the result */
+    recvbytes(s, (void *)(&(r.in_error)), sizeof(int));
+    printf("In error: %d\n", r.in_error);
     recvbytes(s, (void *)(&(r.return_size)), sizeof(int));
     if(r.return_size < 0) {
 	/* Error! */
