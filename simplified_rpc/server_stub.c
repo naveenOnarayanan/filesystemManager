@@ -162,6 +162,7 @@ void makeCall(char *fname, int nparams, arg_type *a, return_type *r) {
 #endif
 
     if(tmp == NULL) {
+    r->in_error = 0;
 	r->return_val = NULL;
 	r->return_size = 0;
     }
@@ -173,7 +174,8 @@ void makeCall(char *fname, int nparams, arg_type *a, return_type *r) {
 #ifdef _DEBUG_1_
 	printf("makeCall(), returned from call to %s()\n", fname); fflush(stdout);
 #endif
-	r->return_size = ret.return_size;
+	r->in_error = ret.in_error;
+    r->return_size = ret.return_size;
 	r->return_val = ret.return_val;
     }
 
@@ -186,6 +188,7 @@ void returnResult(int s, return_type *ret) {
 #endif
 
     if(ret == NULL || ret->return_size <= 0) {
+        printf("Sending it before sending the error\n");
 	int i = 0;
 	sendbytes(s, &i, sizeof(int));
 	return;
@@ -196,6 +199,7 @@ void returnResult(int s, return_type *ret) {
     fflush(stdout);
 #endif
 
+    printf("The error is :%d\n", ret->in_error);
     /* else */
     sendbytes(s, (void *)(&(ret->in_error)), sizeof(int));
     sendbytes(s, (void *)(&(ret->return_size)), sizeof(int));

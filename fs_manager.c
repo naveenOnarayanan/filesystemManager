@@ -33,7 +33,7 @@ int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *
                                             srvPort,
                                             "isAlive", 0);
 
-    int inError = *(int *)(check.in_error);
+    int inError = check.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(check.return_val);
@@ -75,7 +75,7 @@ FSDIR* fsOpenDir(const char *folderName) {
                                           strlen(path) + 1, path);
 
     printf("returned from call\n");
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -125,7 +125,7 @@ int fsCloseDir(FSDIR *folder) {
                                           "fsCloseDir", 1,
                                           sizeof(folder), folder);
 
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -155,7 +155,8 @@ struct fsDirent * fsReadDir(FSDIR *folder){
                                           "fsReadDir", 1,
                                           sizeof(folder), folder);
 
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
+    printf("In error? : %d\n", inError);
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -214,7 +215,7 @@ int fsOpen(const char *fname, int mode) {
 
     printf("Return val for fsOpen: %d\n", *(int *)result.return_val);
 
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -242,7 +243,7 @@ int fsClose(int fd) {
                                           "fsClose", 1,
                                           sizeof(int), &fd);
 
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -269,7 +270,7 @@ int fsRead(int fd, void *buf, const unsigned int count) {
                                           sizeof(int), (void *) &fd,
                                           sizeof(unsigned int), (void *)&count);
 
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -304,7 +305,7 @@ int fsWrite(int fd, const void *buf, const unsigned int count) {
                                           sizeof(unsigned int), (void *)&count,
                                           count, buf);
 
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -333,7 +334,7 @@ int fsRemove(const char *name) {
                                           "fsRemove", 1,
                                           strlen(relative_path) + 1, relative_path);
 
-    int inError = *(int *)(result.in_error);
+    int inError = result.in_error;
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);

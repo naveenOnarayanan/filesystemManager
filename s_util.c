@@ -161,13 +161,13 @@ char * append_local_path(char * folderName) {
   return serverFolder;
 }
 
-int * set_error(int errorCode){
-  errno = errorCode;
-  return get_error();
-}
-
 int * get_error() {
   int * error = malloc(sizeof(int));
   * error = errno;
   return error;
+}
+
+int * set_error(int errorCode){
+  errno = errorCode;
+  return get_error();
 }

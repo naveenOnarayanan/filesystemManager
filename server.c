@@ -288,6 +288,7 @@ return_type fsReadDir(const int nparams, arg_type *a) {
         r.return_val = set_error(ENOENT);
         r.return_size = sizeof(int);
         r.in_error = 1;
+        printf("Error: %d\n", r.in_error);
     } else {
         printf("Directory info: %p\n", dir_info);
         printf("Dirent: %s\n", dir_info->d_name);
