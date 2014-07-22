@@ -141,7 +141,7 @@ int add_dir(DIR * dir) {
     dir_size++;
   }
 
-  dir_obj->dir = dir_size;
+  dir_obj->id = dir_size;
   dir_obj->dir = dir;
   dir_obj->next = NULL;
   dir_obj->prev = NULL;
