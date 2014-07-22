@@ -96,8 +96,18 @@ return_type fsClose(const int nparams, arg_type *a) {
     } 
 
     int resource_id = *(int *)a->arg_val;
+
+    int close_result = close(resource_id);
+
+    if (close_result < 0) {
+        r.return_val = (void *) set_error(EBUSY);
+        r.return_size = sizeof(int);
+        r.in_error = 1;
+        return r;
+    }
+
     int * resource_removed = malloc(sizeof(int));
-    *resource_removed = remove_resource(*(int *)a->arg_val);
+    *resource_removed = remove_resource(resource_id);
 
     if (*resource_removed == 1) {
         r.return_val = (void *) resource_removed;
