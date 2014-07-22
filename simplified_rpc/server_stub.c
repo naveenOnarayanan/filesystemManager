@@ -261,6 +261,7 @@ void launch_server() {
     while((asock = accept(s, (struct sockaddr *)&a, &alen)) > 0) {
 
     printf("Socket is: %s %u\n", inet_ntoa(a.sin_addr), ntohs(a.sin_port));
+    add_client(inet_ntoa(a.sin_addr), ntohs(a.sin_port));
 	/* Single-threaded */
 
 	char *fname;

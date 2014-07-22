@@ -3,3 +3,4 @@ libstubs.a
 *_app
 fsclient
 server
+test*

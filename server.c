@@ -46,7 +46,8 @@ return_type fsOpen(const int nparams, arg_type *a) {
     char * folderName = a->arg_val;
     int mode = *(int*)a->next->arg_val;
 
-    if (resource_in_use(folderName) == 0) {
+    if (
+        (folderName) == 0) {
         char * serverFolder = append_local_path(folderName);
 
         printf("Final folder name: %s\n", serverFolder);

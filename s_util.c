@@ -19,11 +19,13 @@ struct dir_queue {
   struct dir_queue * prev;
 };
 
-struct client_node {
-  int client_id;
-  char * client_ip;
-  char * client_port;
+int client_node_id = 0;
+struct client_queue {
+  int id;
+  char * ip;
+  unsigned short int port;
   struct client_node * next;
+  struct client_node * prev;
 };
 
 struct resource_queue {
@@ -60,6 +62,25 @@ struct dir_queue * find_dir(int id) {
 // int add_client(struct resource_queue * resource) {
 //   struct client_queue * tmp = 
 // }
+
+void add_client(char * client_ip, unsigned short int client_port) {
+  struct client_queue * client = (struct client_queue *) malloc(sizeof(struct client_queue));
+  size_t client_ip_len = strlen(client_ip) + 1;
+  client->ip = malloc(client_ip_len * sizeof(char));
+  strcpy(client->ip, client_ip);
+  client->port = client_port;
+  client->next = NULL;
+  client->prev = NULL;
+
+  if (client_head == NULL) {
+    client_head = client;
+    client_tail = client;
+  } else {
+    client_tail->next = client;
+    client->prev = client_tail;
+    client_tail = client_tail->next;
+  }
+}
 
 int resource_in_use(const char * path) {
   struct resource_queue * tmp = resource_head;
