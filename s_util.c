@@ -50,16 +50,16 @@ struct dir_queue * find_dir(int id) {
   return NULL;
 }
 
-void dequeue_client(struct resource_queue * resource) {
-  struct client_queue * tmp = resource->client;
-  resource->client = resource->client->next;
+// void dequeue_client(struct resource_queue * resource) {
+//   struct client_queue * tmp = resource->client;
+//   resource->client = resource->client->next;
 
-  free(tmp);
-}
+//   free(tmp);
+// }
 
-int add_client(struct resource_queue * resource) {
-  struct client_queue * tmp = 
-}
+// int add_client(struct resource_queue * resource) {
+//   struct client_queue * tmp = 
+// }
 
 int resource_in_use(const char * path) {
   struct resource_queue * tmp = resource_head;
