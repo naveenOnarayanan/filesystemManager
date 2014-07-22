@@ -24,8 +24,8 @@ struct client_queue {
   int id;
   char * ip;
   unsigned short int port;
-  struct client_node * next;
-  struct client_node * prev;
+  struct client_queue * next;
+  struct client_queue * prev;
 };
 
 struct resource_queue {
