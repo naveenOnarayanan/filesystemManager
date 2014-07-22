@@ -327,7 +327,7 @@ int fsRemove(const char *name) {
         return -1;
     }
 
-    char * relative_path = get_relative_path(name, mount);
+    const char * relative_path = get_relative_path(name, mount);
 
     return_type result = make_remote_call(mount->serverIPorHost,
                                           mount->serverPort,
