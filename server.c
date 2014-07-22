@@ -46,13 +46,13 @@ return_type fsOpen(const int nparams, arg_type *a) {
     char * folderName = a->arg_val;
     int mode = *(int*)a->next->arg_val;
 
-    if (
-        (folderName) == 0) {
+    struct resource_queue * resource = find_resource(folderName, FILTER_BY_PATH);
+
+    if (client_use_resource(resource, current_client)) {
         char * serverFolder = append_local_path(folderName);
 
         printf("Final folder name: %s\n", serverFolder);
 
-    
         int flag;
         if (mode == 0) {
             flag = O_RDONLY;
@@ -80,6 +80,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
 
         free(serverFolder);
     } else {
+        add_client_to_resource(resource, current_client);
         r.return_val = set_error(EBUSY);
         r.return_size = 0;
         r.in_error = 1;
@@ -191,7 +192,7 @@ return_type fsRemove(const int nparams, arg_type *a) {
         return r;
     }
 
-    if (resource_in_use(a->arg_val) == 0) {
+    if (find_resource(a->arg_val, FILTER_BY_PATH) == 0) {
         int * remove_result = malloc(sizeof(int));
         char * folderName = append_local_path(a->arg_val);
         printf("Folder to remove: %s\n", folderName);

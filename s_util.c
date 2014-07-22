@@ -5,6 +5,9 @@
 
 host_folder hostFolder;
 
+int FILTER_BY_PATH = 0;
+int FILTER_BY_ID = 1;
+
 struct fsDirent {
     char entName[256];
     unsigned char entType; /* 0 for file, 1 for folder,
@@ -19,13 +22,10 @@ struct dir_queue {
   struct dir_queue * prev;
 };
 
-int client_node_id = 0;
 struct client_queue {
-  int id;
   char * ip;
   unsigned short int port;
   struct client_queue * next;
-  struct client_queue * prev;
 };
 
 struct resource_queue {
@@ -37,7 +37,7 @@ struct resource_queue {
 };
 
 struct dir_queue * dir_head, * dir_tail;
-struct client_queue * client_head, * client_tail;
+struct client_queue * current_client;
 struct resource_queue * resource_head, * resource_tail;
 
 struct dir_queue * find_dir(int id) {
@@ -63,6 +63,36 @@ struct dir_queue * find_dir(int id) {
 //   struct client_queue * tmp = 
 // }
 
+bool client_use_resource(struct resource_queue * resource, struct client_queue * client) {
+  
+  return resource == NULL
+      || (resource != NULL && resource->client == NULL)
+      || (resource->client != NULL 
+        && strcmp(resource->client->ip, client->ip) 
+        && resource->client->port == client->port);
+}
+
+void add_client_to_resource(struct resource_queue * resource, struct client_queue * client) {
+  struct client_queue * tmp = resource->client;
+
+  while (tmp != NULL && tmp->next != NULL) {
+    tmp = tmp->next;
+  }
+
+  struct client_queue * client_obj = (struct client_queue *) malloc(sizeof(struct client_queue));
+  size_t ip_size = strlen(client->ip) + 1;
+  client_obj->ip = malloc(ip_size * sizeof(char));
+  strcpy(client_obj->ip, client->ip);
+  client_obj->port = client->port;
+  client_obj->next = NULL;
+
+  if (tmp == NULL) {
+    tmp = client_obj;
+  } else {
+    tmp->next = client_obj;
+  }
+}
+
 void add_client(char * client_ip, unsigned short int client_port) {
   struct client_queue * client = (struct client_queue *) malloc(sizeof(struct client_queue));
   size_t client_ip_len = strlen(client_ip) + 1;
@@ -70,27 +100,27 @@ void add_client(char * client_ip, unsigned short int client_port) {
   strcpy(client->ip, client_ip);
   client->port = client_port;
   client->next = NULL;
-  client->prev = NULL;
 
-  if (client_head == NULL) {
-    client_head = client;
-    client_tail = client;
-  } else {
-    client_tail->next = client;
-    client->prev = client_tail;
-    client_tail = client_tail->next;
+  current_client = client;
+}
+
+void remove_current_client() {
+  if (current_client != NULL) {
+    free(current_client->ip);
+    free(current_client);
   }
 }
 
-int resource_in_use(const char * path) {
+struct resource_queue * find_resource(const void * query, int filter) {
   struct resource_queue * tmp = resource_head;
   while (tmp != NULL) {
-    if (strcmp(tmp->path, path) == 0) {
-      return 1;
+    if ((filter == FILTER_BY_PATH && strcmp((char *)tmp->path, query) == 0) 
+        || (filter == FILTER_BY_ID && tmp->fd == *(int *)query)) {
+      return tmp;
     }
     tmp = tmp->next;
   }
-  return 0;
+  return NULL;
 }
 
 int remove_dir(const int id) {
@@ -159,36 +189,44 @@ int add_dir(DIR * dir) {
 }
 
 int remove_resource(const int fd) {
-  struct resource_queue * tmp = resource_head;
-  while (tmp != NULL) {
-    if (tmp->fd == fd) {
-      if (tmp->prev == NULL) {
-        resource_head = tmp->next;
-        if (resource_head != NULL) {
-          resource_head->prev = NULL;
-        } else {
-          resource_tail = NULL;
-        }
-      } else {
-        struct resource_queue * resource = tmp->prev;
-        resource->next = tmp->next;
+  struct resource_queue * tmp = find_resource(&fd, FILTER_BY_ID);
 
-        if (resource->next != NULL) {
-          resource->next->prev = resource;
-        } else {
-          resource_tail = resource;
-        }
-      }
-
-      free(tmp->path);
-      free(tmp);
-
-      return 1;
-    }
-
-    tmp = tmp->next;
+  if (tmp == NULL) {
+    return 0;
   }
-  return 0;
+
+  if (tmp->client != NULL) {
+    struct client_queue * client = tmp->client;
+    tmp->client = tmp->client->next;
+
+
+
+    free(client->ip);
+    free(client);
+  }
+
+  if (tmp->prev == NULL) {
+    resource_head = tmp->next;
+    if (resource_head != NULL) {
+      resource_head->prev = NULL;
+    } else {
+      resource_tail = NULL;
+    }
+  } else {
+    struct resource_queue * resource = tmp->prev;
+    resource->next = tmp->next;
+
+    if (resource->next != NULL) {
+      resource->next->prev = resource;
+    } else {
+      resource_tail = resource;
+    }
+  }
+
+  free(tmp->path);
+  free(tmp);
+
+  return 1;
 }
 
 void add_resource(const char * path, const int fd){

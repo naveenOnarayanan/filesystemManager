@@ -281,14 +281,15 @@ void launch_server() {
 	printf("launch_server(), after makeCall()\n"); fflush(stdout);
 #endif
 
-	// returnResult(asock, &ret);
+	returnResult(asock, &ret);
 
 	free(fname);
 	freeArgs(a);
-	// freeRet(ret);
+	freeRet(ret);
+    remove_current_client();
 
-	// shutdown(asock, SHUT_RDWR); close(asock);
-	// asock = -1;
+	shutdown(asock, SHUT_RDWR); close(asock);
+	asock = -1;
     }
 
     /* WARNING -- massive memory, linked list of registered
