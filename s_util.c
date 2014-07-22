@@ -138,7 +138,10 @@ void add_resource(const char * path, const int fd){
   struct resource_queue * resource = malloc(sizeof(struct resource_queue));
   size_t path_length = strlen(path) + 1;
   resource->path = malloc(path_length * sizeof(char));
+  strcpy(resource->path, path);
   resource->fd = fd;
+  resource->next = NULL;
+  resource->prev = NULL;
 
   if (resource_head == NULL) {
     resource_head = resource;
