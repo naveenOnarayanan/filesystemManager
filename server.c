@@ -10,6 +10,7 @@
 #include <dirent.h>
 #include "simplified_rpc/ece454rpc_types.h"
 #include "s_util.c"
+#include <sys/stat.h>
 
 
 #if 1
