@@ -237,6 +237,7 @@ void add_resource(const char * path, const int fd){
   resource->fd = fd;
   resource->next = NULL;
   resource->prev = NULL;
+  resource->client = NULL;
 
   if (resource_head == NULL) {
     resource_head = resource;
