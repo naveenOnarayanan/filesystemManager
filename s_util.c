@@ -19,16 +19,24 @@ struct dir_queue {
   struct dir_queue * prev;
 };
 
+struct client_node {
+  int client_id;
+  char * client_ip;
+  char * client_port;
+  struct client_node * next;
+};
+
 struct resource_queue {
     char * path;
     int fd;
+    struct client_queue * client;
     struct resource_queue * next;
     struct resource_queue * prev;
 };
 
 struct dir_queue * dir_head, * dir_tail;
+struct client_queue * client_head, * client_tail;
 struct resource_queue * resource_head, * resource_tail;
-
 
 struct dir_queue * find_dir(int id) {
   struct dir_queue * tmp = dir_head;
@@ -40,6 +48,17 @@ struct dir_queue * find_dir(int id) {
   }
 
   return NULL;
+}
+
+void dequeue_client(struct resource_queue * resource) {
+  struct client_queue * tmp = resource->client;
+  resource->client = resource->client->next;
+
+  free(tmp);
+}
+
+int add_client(struct resource_queue * resource) {
+  struct client_queue * tmp = 
 }
 
 int resource_in_use(const char * path) {
@@ -77,17 +96,34 @@ int remove_dir(const int id) {
     }
   }
 
-  dir_size--;
   free(tmp);
+
+  return 0;
+}
+
+int dir_id_exists(int id) {
+  struct dir_queue * dir = dir_head;
+  while (dir != NULL) {
+    if (dir->id == id) {
+      return 1;
+    }
+    dir = dir->next;
+  }
 
   return 0;
 }
 
 int add_dir(DIR * dir) {
   struct dir_queue * dir_obj = malloc(sizeof(struct dir_queue));
-  dir_obj->id = dir_size;
+
+  while (dir_id_exists(dir_size) == 1) {
+    dir_size++;
+  }
+
+  dir_obj->dir = dir_size;
   dir_obj->dir = dir;
-  dir_size++;
+  dir_obj->next = NULL;
+  dir_obj->prev = NULL;
 
   if (dir_head == NULL) {
     dir_head = dir_obj;

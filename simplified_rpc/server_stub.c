@@ -104,6 +104,11 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
 	exit(1);
     }
 
+    arg_type *newarg = (arg_type *)malloc(sizeof(arg_type));
+    newarg->arg_size = sizeof(int);
+    newarg->arg_val = (void *)malloc(newarg->arg_size);
+
+
     int i;
     for(i = 0; i < *pnparams; i++) {
 	arg_type *newarg = (arg_type *)malloc(sizeof(arg_type));
@@ -254,6 +259,8 @@ void launch_server() {
     socklen_t alen = sizeof(struct sockaddr_in);
     int asock = -1;
     while((asock = accept(s, (struct sockaddr *)&a, &alen)) > 0) {
+
+    printf("Socket is: %s %u\n", inet_ntoa(a.sin_addr), ntohs(a.sin_port));
 	/* Single-threaded */
 
 	char *fname;
@@ -273,14 +280,14 @@ void launch_server() {
 	printf("launch_server(), after makeCall()\n"); fflush(stdout);
 #endif
 
-	returnResult(asock, &ret);
+	// returnResult(asock, &ret);
 
 	free(fname);
 	freeArgs(a);
-	freeRet(ret);
+	// freeRet(ret);
 
-	shutdown(asock, SHUT_RDWR); close(asock);
-	asock = -1;
+	// shutdown(asock, SHUT_RDWR); close(asock);
+	// asock = -1;
     }
 
     /* WARNING -- massive memory, linked list of registered

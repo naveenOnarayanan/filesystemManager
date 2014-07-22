@@ -105,6 +105,8 @@ void add_dir(FSDIR * dir, struct mount_list * mount) {
 	struct dir_list * dir_obj = malloc(sizeof(struct dir_list));
 	dir_obj->dir = dir;
 	dir_obj->mount = mount;
+	dir_obj->next = NULL;
+	dir_obj->prev = NULL;
 
 	if (dir_head == NULL) {
 		dir_head = dir_obj;
@@ -165,6 +167,9 @@ void add_mount(const char * srvIpOrDomName, const int srvPort, const char * loca
 
     strcpy(mount->localFolder, localFolderName);
 
+    mount->next = NULL;
+    mount->prev = NULL;
+
     printf("mount_head: %p\n", mount_head);
     printf("mount_tail: %p\n", mount_tail);
 
@@ -213,6 +218,8 @@ void add_fd(struct mount_list * mount, int fd) {
 	struct file_desc_list * fd_obj = malloc(sizeof(struct file_desc_list));
 	fd_obj->fd = fd;
 	fd_obj->mount = mount;
+	fd_obj->next = NULL;
+	fd_obj->prev = NULL;
 
 	if (fd_head == NULL) {
 		fd_head = fd_obj;
