@@ -23,7 +23,9 @@ int main(int argc, char *argv[]) {
 
     sleep(10);
 
-    if(fsClose(ff) < 0) {
+    int fsCloseResult = fsClose(ff);
+    printf("fsClose(): %d\n", fsCloseResult);
+    if(fsCloseResult < 0) {
 	perror("fsClose"); exit(1);
     }
 
