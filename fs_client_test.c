@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 	perror("fsOpen(write)"); exit(1);
     }
 
-    sleep(10);
+    sleep(30);
 
     int fsCloseResult = fsClose(ff);
     printf("fsClose(): %d\n", fsCloseResult);

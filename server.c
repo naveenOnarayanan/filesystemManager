@@ -82,7 +82,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
     } else {
         add_client_to_resource(resource, current_client);
         r.return_val = set_error(EBUSY);
-        r.return_size = 0;
+        r.return_size = sizeof(int);
         r.in_error = 1;
     }
 
