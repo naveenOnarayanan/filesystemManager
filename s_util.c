@@ -229,7 +229,7 @@ int remove_resource(const int fd) {
   return 1;
 }
 
-struct resource_queue * add_resource(const char * path, const int fd){
+struct resource_queue * add_resource(const char * path, const int fd, struct client_queue * client){
   struct resource_queue * resource = malloc(sizeof(struct resource_queue));
   size_t path_length = strlen(path) + 1;
   resource->path = malloc(path_length * sizeof(char));
@@ -237,7 +237,7 @@ struct resource_queue * add_resource(const char * path, const int fd){
   resource->fd = fd;
   resource->next = NULL;
   resource->prev = NULL;
-  resource->client = NULL;
+  resource->client = client;
 
   if (resource_head == NULL) {
     resource_head = resource;

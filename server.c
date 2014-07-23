@@ -71,8 +71,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
             r.in_error = 1;
             r.return_size = sizeof(int);
         } else {
-            resource = add_resource(folderName, *fileDescriptor);
-            add_client_to_resource(resource, current_client);
+            resource = add_resource(folderName, *fileDescriptor, current_client);
 
             r.return_val = (void *)fileDescriptor;
             r.return_size = sizeof(int);
