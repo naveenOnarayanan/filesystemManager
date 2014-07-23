@@ -238,7 +238,7 @@ struct resource_queue * add_resource(const char * path, const int fd, struct cli
   resource->next = NULL;
   resource->prev = NULL;
   resource->client = malloc(sizeof(struct resource_queue));
-  size_t client_ip_len = strlen(resource->client->ip) + 1;
+  size_t client_ip_len = strlen(client->ip) + 1;
   resource->client->ip = malloc(client_ip_len * sizeof(char));
   strcpy(resource->client->ip, client->ip);
   resource->client->port = client->port;
