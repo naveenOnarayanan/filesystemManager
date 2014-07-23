@@ -59,6 +59,7 @@ int main(int argc, char *argv[]) {
     printf("close(): %d\n", close(ff));
 
     ff = fsOpen(fname, 1);
+    printf("The returned ff is %d\n", ff);
     if(ff < 0) {
 	perror("fsOpen(write)"); exit(1);
     }

@@ -85,9 +85,9 @@ FSDIR* fsOpenDir(const char *folderName) {
     printf("Returned val: %d\n", *(int *)result.return_val);
 
     FSDIR * dir = (FSDIR *) result.return_val;
-    add_dir(dir, mount);
-
-    return dir;
+    FSDIR * add_dir_result = (FSDIR *) malloc(sizeof(int));
+    *add_dir_result = add_dir(dir, mount);
+    return add_dir_result;
 
 
 
@@ -217,6 +217,8 @@ int fsOpen(const char *fname, int mode) {
 
     int inError = result.in_error;
 
+
+
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
         errno = errorNum;
@@ -224,16 +226,16 @@ int fsOpen(const char *fname, int mode) {
     }
 
    if (result.return_size == sizeof(int)) {
+        printf("Sending the result back to client\n");
         int fd = *(int *)result.return_val;
-        add_fd(mount, fd);
-        return fd;
+        return add_fd(mount, fd);
     }
 
     return 0;
 }
 
 int fsClose(int fd) {
-    struct file_desc_list * fd_obj = find_fd(&fd, FILE_DESCRIPTOR);
+    struct file_desc_list * fd_obj = find_fd(&fd, FILTER_BY_ID);
     if (fd_obj == NULL) {
         return -1;
     }
@@ -241,7 +243,7 @@ int fsClose(int fd) {
     return_type result = make_remote_call(fd_obj->mount->serverIPorHost,
                                           fd_obj->mount->serverPort,
                                           "fsClose", 1,
-                                          sizeof(int), &fd);
+                                          sizeof(int), &fd_obj->fd);
 
     int inError = result.in_error;
 
@@ -259,7 +261,7 @@ int fsClose(int fd) {
 }
 
 int fsRead(int fd, void *buf, const unsigned int count) {
-    struct file_desc_list * file_obj = find_fd(&fd, FILE_DESCRIPTOR);
+    struct file_desc_list * file_obj = find_fd(&fd, FILTER_BY_ID);
     if (file_obj == NULL) {
         return -1;
     }
@@ -267,7 +269,7 @@ int fsRead(int fd, void *buf, const unsigned int count) {
     return_type result = make_remote_call(file_obj->mount->serverIPorHost,
                                           file_obj->mount->serverPort,
                                           "fsRead", 2,
-                                          sizeof(int), (void *) &fd,
+                                          sizeof(int), (void *) &file_obj->fd,
                                           sizeof(unsigned int), (void *)&count);
 
     int inError = result.in_error;
@@ -292,7 +294,7 @@ int fsRead(int fd, void *buf, const unsigned int count) {
 }
 
 int fsWrite(int fd, const void *buf, const unsigned int count) {
-    struct file_desc_list * file_obj = find_fd(&fd, FILE_DESCRIPTOR);
+    struct file_desc_list * file_obj = find_fd(&fd, FILTER_BY_ID);
     if (file_obj == NULL) {
         return -1;
     }
@@ -301,7 +303,7 @@ int fsWrite(int fd, const void *buf, const unsigned int count) {
     return_type result = make_remote_call(file_obj->mount->serverIPorHost,
                                           file_obj->mount->serverPort,
                                           "fsWrite", 3,
-                                          sizeof(int), (void *) &fd,
+                                          sizeof(int), (void *) &file_obj->fd,
                                           sizeof(unsigned int), (void *)&count,
                                           count, buf);
 

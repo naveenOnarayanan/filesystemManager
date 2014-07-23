@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+int dir_list_id = 0;
 struct dir_list {
+	int id;
 	FSDIR * dir;
 	struct mount_list * mount;
 	struct dir_list * next;
@@ -17,7 +19,9 @@ struct mount_list{
 	struct mount_list * prev;
 };
 
+int file_list = 0;
 struct file_desc_list {
+	int id;
 	int fd;
 	char * file_path;
 	struct mount_list * mount;
@@ -29,8 +33,33 @@ struct dir_list * dir_head, * dir_tail;
 struct mount_list * mount_head, * mount_tail;
 struct file_desc_list * fd_head, * fd_tail;
 
-const int FILE_PATH = 0;
-const int FILE_DESCRIPTOR = 1;
+const int FILTER_BY_PATH = 0;
+const int FILTER_BY_ID = 1;
+
+int dir_id_in_use(int id) {
+	struct dir_list * dir = dir_head;
+	while (dir != NULL) {
+		if (dir->id == id) {
+			return 1;
+		}
+		dir = dir->next;
+	}
+
+	return 0;
+}
+
+int fd_id_in_use(int id) {
+	struct file_desc_list * fd = fd_head;
+
+	while (fd != NULL) {
+		if (fd->id == id) {
+			return 1;
+		}
+		fd = fd->next;
+	}
+
+	return 0;
+}
 
 struct mount_list * find_mount(const char * folderPath) {
 	struct mount_list * tmp = mount_head;
@@ -50,8 +79,8 @@ struct file_desc_list * find_fd(const void * id, int id_type) {
 	struct file_desc_list * tmp = fd_head;
 
 	while (tmp != NULL) {
-		if ((id_type == FILE_DESCRIPTOR && tmp->fd == *(int *)id) 
-				|| (id_type == FILE_PATH && strcmp(tmp->file_path, id))) {
+		if ((id_type == FILTER_BY_ID && tmp->id == *(int *)id) 
+				|| (id_type == FILTER_BY_PATH && strcmp(tmp->file_path, id))) {
 			return tmp;
 		}
 		tmp = tmp->next;
@@ -60,11 +89,11 @@ struct file_desc_list * find_fd(const void * id, int id_type) {
 	return NULL;
 }
 
-struct dir_list * find_dir(FSDIR * dir) {
+struct dir_list * find_dir(FSDIR * id) {
 	struct dir_list * tmp = dir_head;
 
 	while (tmp != NULL) {
-		if (tmp->dir == dir) {
+		if (tmp->id == *(int *)id) {
 			return tmp;
 		}
 		tmp = tmp->next;
@@ -101,8 +130,13 @@ int remove_dir(FSDIR * dir) {
 	return 0;
 }
 
-void add_dir(FSDIR * dir, struct mount_list * mount) {
+int add_dir(FSDIR * dir, struct mount_list * mount) {
+	while (dir_id_in_use(dir_list_id) == 1) {
+		dir_list_id++;
+	}
+
 	struct dir_list * dir_obj = malloc(sizeof(struct dir_list));
+	dir_obj->id = dir_list_id;
 	dir_obj->dir = dir;
 	dir_obj->mount = mount;
 	dir_obj->next = NULL;
@@ -116,6 +150,8 @@ void add_dir(FSDIR * dir, struct mount_list * mount) {
 		dir_obj->prev = dir_tail;
 		dir_tail = dir_tail->next;
 	}
+
+	return dir_obj->id;
 }
 
 int remove_mount(const char * localFolderName) {
@@ -188,7 +224,7 @@ void add_mount(const char * srvIpOrDomName, const int srvPort, const char * loca
 }
 
 int remove_fd(const int fd) {
-	struct file_desc_list * fd_obj = find_fd(&fd, FILE_DESCRIPTOR);
+	struct file_desc_list * fd_obj = find_fd(&fd, FILTER_BY_ID);
 
 	if (fd_obj == NULL) {
 		return -1;
@@ -214,8 +250,14 @@ int remove_fd(const int fd) {
 	return 0;
 }
 
-void add_fd(struct mount_list * mount, int fd) {
+int add_fd(struct mount_list * mount, int fd) {
 	struct file_desc_list * fd_obj = malloc(sizeof(struct file_desc_list));
+
+	while (fd_id_in_use(file_list) == 1) {
+		file_list++;
+	}
+
+	fd_obj->id = file_list;
 	fd_obj->fd = fd;
 	fd_obj->mount = mount;
 	fd_obj->next = NULL;
@@ -229,6 +271,8 @@ void add_fd(struct mount_list * mount, int fd) {
 		fd_obj->prev = fd_tail;
 		fd_tail = fd_tail->next;
 	}
+
+	return fd_obj->id;
 }
 
 const char * get_relative_path(const char * path, struct mount_list * mount) {
