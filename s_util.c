@@ -229,7 +229,7 @@ int remove_resource(const int fd) {
   return 1;
 }
 
-void add_resource(const char * path, const int fd){
+struct resource_queue * add_resource(const char * path, const int fd){
   struct resource_queue * resource = malloc(sizeof(struct resource_queue));
   size_t path_length = strlen(path) + 1;
   resource->path = malloc(path_length * sizeof(char));
@@ -247,6 +247,8 @@ void add_resource(const char * path, const int fd){
     resource->prev = resource_tail;
     resource_tail = resource_tail->next;
   }
+
+  return resource;
 }
 
 char * append_local_path(char * folderName) {
