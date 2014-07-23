@@ -4,3 +4,4 @@ libstubs.a
 fsclient
 server
 test*
+fsclient_test
