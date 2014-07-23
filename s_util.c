@@ -31,6 +31,7 @@ struct client_queue {
 struct resource_queue {
     char * path;
     int fd;
+    int mode;
     struct client_queue * client;
     struct resource_queue * next;
     struct resource_queue * prev;
@@ -63,13 +64,16 @@ struct dir_queue * find_dir(int id) {
 //   struct client_queue * tmp = 
 // }
 
-bool client_use_resource(struct resource_queue * resource, struct client_queue * client) {
+bool client_use_resource(struct resource_queue * resource, struct client_queue * client, int mode) {
   
   return resource == NULL
       || (resource != NULL && resource->client == NULL)
       || (resource->client != NULL 
-        && strcmp(resource->client->ip, client->ip) 
-        && resource->client->port == client->port);
+          && strcmp(resource->client->ip, client->ip) 
+          && resource->client->port == client->port)
+      || (resource->client != NULL 
+          && resource->mode == mode && mode == 0
+  );
 }
 
 void add_client_to_resource(struct resource_queue * resource, struct client_queue * client) {
@@ -229,11 +233,12 @@ int remove_resource(const int fd) {
   return 1;
 }
 
-struct resource_queue * add_resource(const char * path, const int fd, struct client_queue * client){
+struct resource_queue * add_resource(const char * path, const int fd, const int mode, struct client_queue * client){
   struct resource_queue * resource = malloc(sizeof(struct resource_queue));
   size_t path_length = strlen(path) + 1;
   resource->path = malloc(path_length * sizeof(char));
   strcpy(resource->path, path);
+  resource->mode = mode;
   resource->fd = fd;
   resource->next = NULL;
   resource->prev = NULL;

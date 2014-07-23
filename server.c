@@ -48,7 +48,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
 
     struct resource_queue * resource = find_resource(folderName, FILTER_BY_PATH);
 
-    if (client_use_resource(resource, current_client)) {
+    if (client_use_resource(resource, current_client, mode)) {
         char * serverFolder = append_local_path(folderName);
 
         printf("Final folder name: %s\n", serverFolder);
@@ -71,7 +71,7 @@ return_type fsOpen(const int nparams, arg_type *a) {
             r.in_error = 1;
             r.return_size = sizeof(int);
         } else {
-            resource = add_resource(folderName, *fileDescriptor, current_client);
+            resource = add_resource(folderName, *fileDescriptor, mode, current_client);
 
             r.return_val = (void *)fileDescriptor;
             r.return_size = sizeof(int);

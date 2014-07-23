@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     printf("fsMount(): %d\n", fsMount(argv[1], atoi(argv[2]), dirname));
 
     char * fname = "/wtf/file_1.txt";
-    int ff = fsOpen(fname, 1);
+    int ff = fsOpen(fname, 0);
     printf("The ff: %d\n", ff);
     if(ff < 0) {
 	perror("fsOpen(write)"); exit(1);
