@@ -58,23 +58,19 @@ int fsUnmount(const char *localFolderName) {
 }
 
 FSDIR* fsOpenDir(const char *folderName) {
-    printf("The folder is called: %s\n", folderName);
     struct mount_list * mount = find_mount(folderName);
-    printf("Mount returned: %s\n", mount->serverIPorHost);
     if (mount == NULL) {
+        printf("Directory path is not mounted\n");
         return NULL;
     }
 
     const char * path = get_relative_path(folderName, mount);
-
-    printf("Relative folder path: %s\n", path);
 
     return_type result = make_remote_call(mount->serverIPorHost,
                                           mount->serverPort,
                                           "fsOpenDir", 1,
                                           strlen(path) + 1, path);
 
-    printf("returned from call\n");
     int inError = result.in_error;
 
     if (inError == 1) {
@@ -82,36 +78,10 @@ FSDIR* fsOpenDir(const char *folderName) {
         errno = errorNum;
     }
 
-    printf("Returned val: %d\n", *(int *)result.return_val);
-
     FSDIR * dir = (FSDIR *) result.return_val;
     FSDIR * add_dir_result = (FSDIR *) malloc(sizeof(int));
     *add_dir_result = add_dir(dir, mount);
     return add_dir_result;
-
-
-
-    // if (strncmp(folderName, folderAlias, folderAliasLength) == 0) {
-    //     char * temp = folderName;
-    //     temp += folderAliasLength;
-    //     FSDIR retDir;
-
-    //     return_type dir = make_remote_call(srvIpOrDomName,
-    //                                         srvPort,
-    //                                         "fsOpenDir",
-    //                                         0);
-
-    //     if (dir.return_size == 0) {
-    //         // TODO: Set the errno appropriately
-    //         // errno = -1;
-    //         return NULL;
-    //     } else {
-    //         retDir = return_type.return_val;
-    //         return retDir;
-    //     }
-    // }
-
-    //return(opendir(folderName));
 }
 
 int fsCloseDir(FSDIR *folder) {
@@ -138,12 +108,9 @@ int fsCloseDir(FSDIR *folder) {
     } else {
         return *(int *)result.return_val;
     }
-
-
 }
 
 struct fsDirent * fsReadDir(FSDIR *folder){
-    printf("ReadDir ptr: %p\n", folder);
     struct dir_list * dir_obj = find_dir(folder);
 
     if (dir_obj == NULL) {
@@ -156,7 +123,6 @@ struct fsDirent * fsReadDir(FSDIR *folder){
                                           sizeof(folder), folder);
 
     int inError = result.in_error;
-    printf("In error? : %d\n", inError);
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -165,34 +131,12 @@ struct fsDirent * fsReadDir(FSDIR *folder){
     }
 
     struct fsDirent * fsdir = result.return_val;
-    printf("READ DIR: %s\n", fsdir->entName);
 
     if (result.return_size == 0) {
         return NULL;
     } else {
         return (struct fsDirent *) result.return_val;
     }
-
- //    const int initErrno = errno;
- //    struct dirent *d = readdir(folder);
-
- //    if(d == NULL) {
-	// if(errno == initErrno) errno = 0;
-	// return NULL;
- //    }
-
- //    if(d->d_type == DT_DIR) {
-	// dent.entType = 1;
- //    }
- //    else if(d->d_type == DT_REG) {
-	// dent.entType = 0;
- //    }
- //    else {
-	// dent.entType = -1;
- //    }
-
- //    memcpy(&(dent.entName), &(d->d_name), 256);
- //    return &dent;
 }
 
 int fsOpen(const char *fname, int mode) {
@@ -201,11 +145,7 @@ int fsOpen(const char *fname, int mode) {
         return -1;
     }
 
-    printf("Mount folder: %s\n", mount->localFolder);
-
     const char * path = get_relative_path(fname, mount);
-
-    printf("OPEN: %s\n", path);
 
     return_type result = make_remote_call(mount->serverIPorHost,
                                           mount->serverPort,
@@ -213,11 +153,7 @@ int fsOpen(const char *fname, int mode) {
                                           strlen(path) + 1, path,
                                           sizeof(int), (void *) &mode);
 
-    printf("Return val for fsOpen: %d\n", *(int *)result.return_val);
-
     int inError = result.in_error;
-
-
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
@@ -226,7 +162,6 @@ int fsOpen(const char *fname, int mode) {
     }
 
    if (result.return_size == sizeof(int)) {
-        printf("Sending the result back to client\n");
         int fd = *(int *)result.return_val;
         return add_fd(mount, fd);
     }
@@ -284,13 +219,9 @@ int fsRead(int fd, void *buf, const unsigned int count) {
         return -1;
     }
 
-    printf("Return size: %d\n", result.return_size);
-    printBuf(result.return_val, result.return_size);
-
     memcpy(buf, result.return_val, result.return_size);
     return result.return_size;
 
-    //return(read(fd, buf, (size_t)count));
 }
 
 int fsWrite(int fd, const void *buf, const unsigned int count) {
@@ -299,7 +230,6 @@ int fsWrite(int fd, const void *buf, const unsigned int count) {
         return -1;
     }
 
-    printf("Size of buff to write: %lu\n", strlen(buf));
     return_type result = make_remote_call(file_obj->mount->serverIPorHost,
                                           file_obj->mount->serverPort,
                                           "fsWrite", 3,
@@ -324,7 +254,6 @@ int fsWrite(int fd, const void *buf, const unsigned int count) {
 
 int fsRemove(const char *name) {
     struct mount_list * mount = find_mount(name);
-    printf("MOUNT FOUND IN REMOVE: %p\n", mount);
     if (mount == NULL) {
         return -1;
     }
@@ -344,7 +273,6 @@ int fsRemove(const char *name) {
         return -1;
     }
 
-    printf("Result returned: %d\n", result.return_size);
     if (result.return_size == 0) {
         return -1;
     }

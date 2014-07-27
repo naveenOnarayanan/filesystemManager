@@ -188,15 +188,10 @@ void add_mount(const char * srvIpOrDomName, const int srvPort, const char * loca
 
 	size_t srvIpOrDomNameSize = strlen(srvIpOrDomName) + 1;
     mount->serverIPorHost = malloc(srvIpOrDomNameSize * sizeof(char));
-    printf("Was able to allocate memory\n");
+
     strcpy(mount->serverIPorHost, srvIpOrDomName);
 
-    printf("Was able to strcpy serverIpOrHost\n");
-    printf("IP: %s\n", mount->serverIPorHost);
-
     mount->serverPort = srvPort;
-
-    printf("Port: %d\n", mount->serverPort);
 
     size_t folderAliasLength = strlen(localFolderName) + 1;
     mount->localFolder = malloc(folderAliasLength * sizeof(char));
@@ -206,9 +201,6 @@ void add_mount(const char * srvIpOrDomName, const int srvPort, const char * loca
     mount->next = NULL;
     mount->prev = NULL;
 
-    printf("mount_head: %p\n", mount_head);
-    printf("mount_tail: %p\n", mount_tail);
-
     if (mount_head == NULL) {
         mount_head = mount;
         mount_tail = mount;
@@ -217,10 +209,6 @@ void add_mount(const char * srvIpOrDomName, const int srvPort, const char * loca
         mount->prev = mount_tail;
         mount_tail = mount_tail->next;
     }
-
-    printf("mount_head: %p\n", mount_head);
-    printf("mount_tail: %p\n", mount_tail);
-    printf("Folder name: %s\n", mount->localFolder);
 }
 
 int remove_fd(const int fd) {
