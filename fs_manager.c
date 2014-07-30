@@ -47,7 +47,7 @@ int fsMount(const char *srvIpOrDomName, const unsigned int srvPort, const char *
 
         add_mount(srvIpOrDomName, srvPort, localFolderName);
         
-        return isServerAlive;
+        return 0;
     } else {
         return -1;
     }
@@ -126,7 +126,11 @@ struct fsDirent * fsReadDir(FSDIR *folder){
 
     if (inError == 1) {
         int errorNum = *(int *)(result.return_val);
-        errno = errorNum;
+        if (errorNum == ENOENT) {
+            errno = 0;
+        } else {
+            errno = errorNum;
+        }
         return NULL;
     }
 
