@@ -154,7 +154,6 @@ void makeCall(char *fname, int nparams, arg_type *a, return_type *r) {
     struct fn *tmp;
     for(tmp = fnp; tmp != NULL; tmp = tmp->next) {
 #ifdef _DEBUG_1_
-	printf("makeCall(), tmp: 0x%08x\n", (unsigned int)tmp);
 	fflush(stdout);
 #endif
 	if(!strcmp(fname, tmp->fname) && nparams == tmp->nparams) {
