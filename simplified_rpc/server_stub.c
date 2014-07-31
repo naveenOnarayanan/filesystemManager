@@ -18,7 +18,7 @@
 #include <signal.h>
 #include "ece454rpc_types.h"
 
-#if 1
+#if 0
 #define _DEBUG_1_
 #endif
 
@@ -40,10 +40,8 @@ struct fn *fnp = NULL; /* Database of registered functions.
 			  twice and we wouldn't know it. */
 
 void printRegisteredProcedures() {
-    printf("Registered procedures:\n"); fflush(stdout);
     struct fn *tmp;
     for(tmp = fnp; tmp != NULL; tmp = tmp->next) {
-	printf("\t%s, %d\n", tmp->fname, tmp->nparams);
 	fflush(stdout);
     }
 
@@ -121,9 +119,7 @@ void recvCall(int s, char **pfname, int *pnparams, arg_type **pa) {
 
 	newarg->arg_val = (void *)malloc(newarg->arg_size);
 	recvbytes(s, (void *)(newarg->arg_val), newarg->arg_size);
-    printf("argVal: %s\n", (char *)newarg->arg_val);
 	newarg->next = NULL;
-    printf("here\n");
 	if(i == 0) {
 	    *pa = newarg;
 	}
@@ -193,7 +189,6 @@ void returnResult(int s, return_type *ret) {
 #endif
 
     if(ret == NULL || ret->return_size <= 0) {
-        printf("Sending it before sending the error\n");
 	int i = 0;
 	sendbytes(s, &i, sizeof(int));
 	return;
@@ -204,7 +199,6 @@ void returnResult(int s, return_type *ret) {
     fflush(stdout);
 #endif
 
-    printf("The error is :%d\n", ret->in_error);
     /* else */
     sendbytes(s, (void *)(&(ret->in_error)), sizeof(int));
     sendbytes(s, (void *)(&(ret->return_size)), sizeof(int));
@@ -249,7 +243,7 @@ void launch_server() {
 	exit(0);
     }
 
-    printf("%s %u\n", inet_ntoa(a.sin_addr), ntohs(a.sin_port));
+    printf("%s %u\n", inet_ntoa(a.sin_addr), ntohs(a.sin_port)); fflush(stdout);
     
     if(listen(s, 0) < 0) {
 	perror("listen"); exit(0);
@@ -260,8 +254,7 @@ void launch_server() {
     int asock = -1;
     while((asock = accept(s, (struct sockaddr *)&a, &alen)) > 0) {
 
-    printf("Socket is: %s %u\n", inet_ntoa(a.sin_addr), ntohs(a.sin_port));
-    add_client(inet_ntoa(a.sin_addr), ntohs(a.sin_port));
+    	add_client(inet_ntoa(a.sin_addr), ntohs(a.sin_port));
 	/* Single-threaded */
 
 	char *fname;

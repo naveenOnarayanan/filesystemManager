@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 
 
-#if 1
+#if 0
 #define _DEBUG_1_
 #endif
 
@@ -51,8 +51,6 @@ return_type fsOpen(const int nparams, arg_type *a) {
     if (client_use_resource(resource, current_client, mode)) {
         char * serverFolder = append_local_path(folderName);
 
-        printf("Final folder name: %s\n", serverFolder);
-
         int flag;
         if (mode == 0) {
             flag = O_RDONLY;
@@ -62,9 +60,6 @@ return_type fsOpen(const int nparams, arg_type *a) {
 
         int *fileDescriptor = (int*)malloc(sizeof(int));
         *fileDescriptor = open(serverFolder, flag, S_IRWXU);
-        printf("Error: %s\n", strerror(errno));
-
-        printf("FileDescriptor: %d\n", *fileDescriptor);
 
         if (*fileDescriptor < 0) {
             r.return_val = set_error(EBADF);
@@ -124,22 +119,17 @@ return_type fsClose(const int nparams, arg_type *a) {
 }
 
 return_type fsRead(const int nparams, arg_type *a) {
-    printf("params: %d\n", nparams);
     if (nparams == 2) {
         int fileDescriptor = *(int *)a->arg_val;
         unsigned int count = *(unsigned int*) a->next->arg_val;
-        printf("File descriptor: %d\n", fileDescriptor);
         char * buff = malloc(count * sizeof(char));
         int total_read = read(fileDescriptor, buff, (size_t)count);
         if (total_read >= 0) {
             r.return_size = total_read;
             r.return_val = buff;
             r.in_error = 0;
-        } else {
-            printf("Oh no! %s\n", strerror(errno));
         }
     } else {
-        printf("Number of parameters dont match! %d\n", nparams);
         r.return_val = set_error(EINVAL);
         r.return_size = sizeof(int);
         r.in_error = 1;
@@ -167,8 +157,6 @@ return_type fsWrite(const int nparams, arg_type *a) {
     int * write_result = malloc(sizeof(int));
     *write_result = write(fd, buff, (size_t)count);
 
-    printf("The write result: %d\n", *write_result);
-
     if (*write_result > -1) {
         r.return_val = (void *) write_result;
         r.return_size = sizeof(int);
@@ -195,10 +183,8 @@ return_type fsRemove(const int nparams, arg_type *a) {
     if (find_resource(a->arg_val, FILTER_BY_PATH) == 0) {
         int * remove_result = malloc(sizeof(int));
         char * folderName = append_local_path(a->arg_val);
-        printf("Folder to remove: %s\n", folderName);
 
         *remove_result = remove(folderName);
-        printf("Print the error: %s\n",strerror(errno));
 
         r.return_val = (void *)remove_result;
         r.return_size = sizeof(int);
@@ -213,7 +199,6 @@ return_type fsRemove(const int nparams, arg_type *a) {
 }
 
 return_type fsOpenDir(const int nparams, arg_type *a) {
-    printf("The number of parameters: %d\n", nparams);
     if (nparams != 1) {
         r.return_val = set_error(EINVAL);
         r.return_size = sizeof(int);
@@ -221,7 +206,6 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
         return r;
     }
 
-    printf("Trying to open dir: %s\n", (char *)a->arg_val);
 
     char * serverFolder = append_local_path(a->arg_val);
     DIR * dir = opendir(serverFolder);
@@ -232,10 +216,7 @@ return_type fsOpenDir(const int nparams, arg_type *a) {
         r.in_error = 1;
     } else {
         int * id = malloc(sizeof(int));
-        printf("ID: %p\n", id);
         *id = add_dir(dir);
-        printf("ID: %p\n", id);
-        printf("ID: %d\n", *id);
 
         r.return_val = (void *) id;
         r.return_size = sizeof(int);
@@ -266,8 +247,6 @@ return_type fsCloseDir(const int nparams, arg_type *a) {
 
     int * close_dir_result = malloc(sizeof(int));
     *close_dir_result = closedir(dir->dir);
-
-    printf("Closing dir: %d\n", *close_dir_result);
 
     if (*close_dir_result == 0) {
         remove_dir(*(int *)a->arg_val);
@@ -301,12 +280,7 @@ return_type fsReadDir(const int nparams, arg_type *a) {
         r.return_val = set_error(ENOENT);
         r.return_size = sizeof(int);
         r.in_error = 1;
-        printf("Error: %d\n", r.in_error);
     } else {
-        printf("Directory info: %p\n", dir_info);
-        printf("Dirent: %s\n", dir_info->d_name);
-        printf("Size of dir_info: %lu\n", sizeof(dir_info));
-        
         struct fsDirent * dirent = malloc(sizeof(struct fsDirent));
 
         if(dir_info->d_type == DT_DIR) {
@@ -353,7 +327,6 @@ int main(int argc, char*argv[]) {
 #ifdef _DEBUG_1_
         printRegisteredProcedures();
 #endif
-        printf("Registered Folder: %s\n", hostFolder.hostedFolderName);
 
         launch_server();
     } else {
